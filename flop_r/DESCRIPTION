@@ -1,0 +1,22 @@
+Package: flopsearch
+Title: Embracing Discrete Search: A Reasonable Approach to Causal Structure Learning
+Version: 0.1.0
+Authors@R: c(
+    person("Marcel", "Wienöbst", email = "marcel.wienoebst@gmx.de", role = c("aut", "cre", "cph")),
+    person("Sebastian", "Weichwald", role = "aut"),
+    person("Leonard", "Henckel", role = "aut"))
+Description: Provides an effective causal discovery algorithm for linear
+    additive noise models based on discrete search. 
+License: Mozilla Public License 2.0
+URL: https://github.com/CausalDisco/flop
+BugReports: https://github.com/CausalDisco/flop/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Config/rextendr/version: 0.4.2
+SystemRequirements: Cargo (Rust's package manager), rustc >= 1.65.0, xz
+Depends: 
+    R (>= 4.2)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

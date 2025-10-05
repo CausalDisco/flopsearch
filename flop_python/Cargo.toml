@@ -1,0 +1,15 @@
+[package]
+name = "flopsearch"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "flopsearch"
+crate-type = ["cdylib"]
+
+[dependencies]
+nalgebra = "0.34"
+numpy = { version = "0.26", features = ["nalgebra"] }
+pyo3 = "0.26"
+flop = { path = "../flop" }

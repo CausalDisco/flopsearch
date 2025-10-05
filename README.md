@@ -1,0 +1,36 @@
+# FLOP Causal Discovery Algorithm
+
+This repository contains a Rust implementation of the FLOP causal discovery algorithm available from Python and R. 
+
+## Installation
+In Python, flopsearch can be installed via pip:
+
+```bash
+pip install flopsearch
+```
+
+In R, flopsearch can be installed directly from Github:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("CausalDisco/flop/flop_r")
+```
+
+Note that the name of the installed package is ```flopsearch``` and can be loaded with
+``` r
+library(flopsearch)
+```
+
+## How To Run FLOP
+In Python, as a simple example, FLOP can be called by
+``` py
+flopsearch.flop(X, 2.0, restarts=20)
+```
+with ```X``` being the data matrix, ```2.0``` the BIC penalty parameter and the number of ILS ```restarts``` being set to ```20```.
+
+Similary, in R, one can call:
+``` r
+flopsearch::flop(X, 2.0, restarts=20)
+```
+
+Instead of the number of restarts, it is also possible to set a ```timeout``` in seconds after which the search terminates and returns the best-scoring graph found thus far.

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["maturin>=1.9,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "flopsearch"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+authors= [{name = "Marcel Wienöbst", email = "marcel.wienoebst@gmx.de"}, {name = "Sebastian Weichwald"}, {name = "Leonard Henckel"}]
+description = "Python package providing an implementation of the FLOP causal discovery algorithm for linear additive noise models"
+keywords = ["causal discovery", "DAGs", "Bayesian networks", "structure learning"]
+dynamic = ["version"]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
