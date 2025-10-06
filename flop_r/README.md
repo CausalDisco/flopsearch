@@ -17,11 +17,14 @@ You can install the development version of flopsearch from
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("CausalDisco/flop/flop_r")
+remotes::install_github("CausalDisco/flopsearch/flop_r")
 ```
 
-Note that the name of the installed package is `flopsearch` and can be
-loaded with
+This requires a working installation of the [Rust
+toolchain](https://rust-lang.org/tools/install/).
+
+The name of the installed package is `flopsearch` and it can be loaded
+with:
 
 ``` r
 library(flopsearch)
