@@ -16,8 +16,7 @@ You can install the development version of flopsearch from
 [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("remotes")
-remotes::install_github("CausalDisco/flopsearch/flop_r")
+install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.1.0/flopsearch.tar.gz")
 ```
 
 This requires a working installation of the [Rust
