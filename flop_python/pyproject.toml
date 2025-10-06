@@ -12,6 +12,7 @@ classifiers = [
 ]
 authors= [{name = "Marcel Wienöbst", email = "marcel.wienoebst@gmx.de"}, {name = "Sebastian Weichwald"}, {name = "Leonard Henckel"}]
 description = "Python package providing an implementation of the FLOP causal discovery algorithm for linear additive noise models"
+readme = "README.md"
 keywords = ["causal discovery", "DAGs", "Bayesian networks", "structure learning"]
 dynamic = ["version"]
 
