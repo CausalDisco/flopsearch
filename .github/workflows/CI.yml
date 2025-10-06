@@ -99,6 +99,7 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          maturin-version: "1.9.4"
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter --manifest-path flop_python/Cargo.toml
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
