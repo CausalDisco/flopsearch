@@ -29,7 +29,7 @@ fn flop<'py>(
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
     if restarts.is_none() && timeout.is_none() {
         return Err(PyValueError::new_err(
-            "error: neither number of restarts nor timeout was specified",
+            "error: neither number of restarts nor timeout was specified, e.g., pass restarts=20 as optional argument",
         ));
     }
     let flop_config = FlopConfig::new(lambda_bic, restarts, timeout, false);

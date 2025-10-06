@@ -38,7 +38,7 @@ fn flop(
 ) -> Result<RMatrix<f64>> {
     if restarts.is_none() && timeout.is_none() {
         return Err(extendr_api::Error::from(
-            "Error: neither number of restarts nor timeout was specified",
+            "Error: neither number of restarts nor timeout was specified, e.g., pass restarts=20 as optional argument",
         ));
     }
     let flop_config = FlopConfig::new(lambdaBic, restarts, timeout, false);
