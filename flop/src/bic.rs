@@ -32,9 +32,9 @@ impl Bic {
         let cholesky = matrix::submatrix(&self.cov, &parents_v, &parents_v)
             .cholesky()
             .unwrap();
-        let cond_var = cholesky.l_dirty()[(num_parents, num_parents)];
+        let std_var = cholesky.l_dirty()[(num_parents, num_parents)];
         LocalScore {
-            bic: self.compute_local_bic(num_parents, cond_var),
+            bic: self.compute_local_bic(num_parents, std_var),
             chol: cholesky,
             parents,
         }
