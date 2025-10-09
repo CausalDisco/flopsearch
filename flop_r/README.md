@@ -16,7 +16,7 @@ You can install the development version of flopsearch from
 [GitHub](https://github.com/) with:
 
 ``` r
-install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.1.0/flopsearch.tar.gz")
+install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.1.1/flopsearch.tar.gz")
 ```
 
 This requires a working installation of the [Rust
@@ -27,6 +27,19 @@ with:
 
 ``` r
 library(flopsearch)
+```
+
+## Citing FLOP
+
+If you use FLOP in your scientific work, please cite this paper:
+
+``` bibtex
+@article{cifly2025,
+  author  = {Marcel Wien{"{o}}bst and Leonard Henckel and Sebastian Weichwald},
+  title   = {{Embracing Discrete Search: A Reasonable Approach to Causal Structure Learning}},
+  journal = {{arXiv preprint arXiv:2510.04970}},
+  year    = {2025}
+}
 ```
 
 ## Example
