@@ -1,8 +1,8 @@
 [package]
 name = 'flop_r'
 publish = false
-version = '0.1.0'
-edition = '2021'
+version = '0.1.1'
+edition = '2024'
 rust-version = '1.65'
 
 [lib]
@@ -11,7 +11,7 @@ name = 'flop_r'
 
 [dependencies]
 extendr-api = '0.8.1'
-flop = { path = "./flop" }
+flop = { path = "flop" }
 nalgebra = "0.34"
 
 [profile.release]
