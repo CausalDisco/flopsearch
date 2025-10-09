@@ -4,6 +4,7 @@ pub mod cholesky;
 pub mod fit_permutation;
 pub mod global_abort;
 pub mod graph;
+pub mod linalg;
 pub mod matrix;
 pub mod scores;
 pub mod token_buffer;
