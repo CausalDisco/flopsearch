@@ -42,11 +42,19 @@ impl SquareMatrix {
         let mut chol_data = Vec::with_capacity(Cholesky::chol_size(self.dim));
         for i in 0..self.dim {
             for j in i..self.dim {
-                chol_data.push(tmp_chol.get(i, j));
+                chol_data.push(tmp_chol.get(j, i));
             }
         }
         Cholesky::new(chol_data, self.dim)
     }
+}
+
+fn abs_diff_sum(a: &[f64], b: &[f64]) -> f64 {
+    let mut sum = 0.0;
+    for i in 0..a.len() {
+        sum += (a[i] - b[i]).abs();
+    }
+    sum
 }
 
 #[test]
@@ -57,13 +65,7 @@ fn test_cholesky() {
     );
     let chol = Cholesky::new(vec![2.0, 6.0, -8.0, 1.0, 5.0, 3.0], 3);
     let output = input.cholesky();
-    let mut abs_diff = 0.0;
-    for i in 0..input.dim {
-        for j in 0..input.dim {
-            abs_diff += (output.get(i, j) - chol.get(i, j)).abs();
-        }
-    }
-    assert!(abs_diff < 1e-9);
+    assert!(abs_diff_sum(&chol.data, &output.data) < 1e-9);
 }
 
 // packed format column-major
@@ -88,7 +90,7 @@ impl Cholesky {
             new_chol.data.push(self.data[idx]);
             idx += 1;
             for j in i + 1..self.dim {
-                x[j] -= x[i];
+                x[j] -= self.data[idx] * x[i];
                 new_chol.data.push(self.data[idx]);
                 idx += 1;
             }
@@ -114,12 +116,14 @@ impl Cholesky {
             if i < k {
                 for j in i..self.dim {
                     if j != k {
-                        new_chol.data.push(self.data[j]);
+                        new_chol.data.push(self.data[idx]);
                     }
                     idx += 1;
                 }
             } else if i == k {
-                for _ in i..self.dim {
+                // skip (k, k) element
+                idx += 1;
+                for _ in i + 1..self.dim {
                     x.push(self.data[idx]);
                     idx += 1;
                 }
@@ -127,13 +131,13 @@ impl Cholesky {
                 // Givens rotation
                 // compute c and s
                 let a = self.data[idx];
-                let b = self.data[i - k - 1];
+                let b = x[i - k - 1];
                 let mut c = 1.0;
                 let mut s = 0.0;
                 if b != 0.0 {
                     if b.abs() > a.abs() {
                         let tau = -a / b;
-                        s = 1.0 / (1.0 + tau * tau).sqrt();
+                        s = -1.0 / (1.0 + tau * tau).sqrt();
                         c = s * tau;
                     } else {
                         let tau = -b / a;
@@ -141,20 +145,64 @@ impl Cholesky {
                         s = c * tau;
                     }
                 }
+
+                // ensure positivity of r (new diagonal entry)
+                let mut r = c * a - s * b;
+                if r < 0.0 {
+                    c = -c;
+                    s = -s;
+                    r = -r;
+                }
+                new_chol.data.push(r);
+                x[i - k - 1] = 0.0;
+                idx += 1;
+
                 // apply Givens rotation
-                for j in i..self.dim {
+                for j in i + 1..self.dim {
                     let tau1 = self.data[idx];
                     let tau2 = x[j - k - 1];
                     new_chol.data.push(c * tau1 - s * tau2);
                     x[j - k - 1] = s * tau1 + c * tau2;
+                    idx += 1;
                 }
             }
         }
-        todo!()
+        new_chol
     }
 
     // put into utils
     fn chol_size(dim: usize) -> usize {
         dim * (dim + 1) / 2
     }
+}
+
+#[test]
+fn test_cholesky_updates() {
+    let a = SquareMatrix::new(vec![4.0, 12.0, 12.0, 37.0], 2);
+    let chol_a = Cholesky::new(vec![2.0, 6.0, 1.0], 2);
+    let out_a = a.cholesky();
+    assert!(abs_diff_sum(&chol_a.data, &out_a.data) < 1e-9);
+
+    let new_col = vec![-16.0, -43.0, 98.0];
+    let out_b = chol_a.append_column(new_col);
+    let chol_b = Cholesky::new(vec![2.0, 6.0, -8.0, 1.0, 5.0, 3.0], 3);
+    assert!(abs_diff_sum(&chol_b.data, &out_b.data) < 1e-9);
+
+    let out_c = chol_b.remove_column(2);
+    assert!(abs_diff_sum(&chol_a.data, &out_c.data) < 1e-9);
+
+    let out_d = chol_b.remove_column(1);
+    let chol_d = Cholesky::new(vec![2.0, -8.0, 34.0f64.sqrt()], 2);
+    assert!(abs_diff_sum(&chol_d.data, &out_d.data) < 1e-9);
+
+    let out_e = chol_b.remove_column(0);
+    let chol_e = Cholesky::new(
+        vec![
+            37.0f64.sqrt(),
+            -43.0 * 37.0f64.sqrt() / 37.0,
+            65749.0f64.sqrt() / 37.0,
+        ],
+        2,
+    );
+    assert!(abs_diff_sum(&chol_e.data, &out_e.data) < 1e-9);
 }
