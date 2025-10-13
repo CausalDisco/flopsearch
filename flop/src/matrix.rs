@@ -1,4 +1,5 @@
-use nalgebra::{DMatrix, DVector};
+use crate::linalg::SquareMatrix;
+use nalgebra::DMatrix;
 
 pub(crate) fn cov_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
     let n = data.nrows();
@@ -25,10 +26,20 @@ pub(crate) fn corr_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
     cov
 }
 
-pub(crate) fn submatrix(matrix: &DMatrix<f64>, rows: &[usize], cols: &[usize]) -> DMatrix<f64> {
-    DMatrix::from_fn(rows.len(), cols.len(), |i, j| matrix[(rows[i], cols[j])])
+pub(crate) fn submatrix(matrix: &DMatrix<f64>, idxs: &[usize]) -> SquareMatrix {
+    let mut data = Vec::with_capacity(idxs.len() * idxs.len());
+    for &row in idxs.iter() {
+        for &col in idxs.iter() {
+            data.push(matrix[(row, col)]);
+        }
+    }
+    SquareMatrix::new(data, idxs.len())
 }
 
-pub(crate) fn column_subvector(matrix: &DMatrix<f64>, rows: &[usize], col: usize) -> DVector<f64> {
-    DVector::from_fn(rows.len(), |i, _| matrix[(rows[i], col)])
+pub(crate) fn column_subvector(matrix: &DMatrix<f64>, rows: &[usize], col: usize) -> Vec<f64> {
+    let mut vec = Vec::with_capacity(rows.len());
+    for &row in rows.iter() {
+        vec.push(matrix[(row, col)]);
+    }
+    vec
 }

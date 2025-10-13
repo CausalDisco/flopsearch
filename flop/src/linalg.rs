@@ -2,26 +2,26 @@
 // -> rename buffer to data
 // -> later check how much allocs cost
 
-struct SquareMatrix {
+pub struct SquareMatrix {
     data: Vec<f64>,
     dim: usize,
 }
 
 impl SquareMatrix {
-    fn new(data: Vec<f64>, dim: usize) -> Self {
+    pub fn new(data: Vec<f64>, dim: usize) -> Self {
         Self { data, dim }
     }
 
-    fn get(&self, i: usize, j: usize) -> f64 {
+    pub fn get(&self, i: usize, j: usize) -> f64 {
         self.data[i * self.dim + j]
     }
 
-    fn set(&mut self, i: usize, j: usize, x: f64) {
+    pub fn set(&mut self, i: usize, j: usize, x: f64) {
         self.data[i * self.dim + j] = x;
     }
 
     // TODO: add error handling for degenerate matrices
-    fn cholesky(&self) -> Cholesky {
+    pub fn cholesky(&self) -> Cholesky {
         // create Cholesky row-by-row in square matrix
         let mut tmp_chol = SquareMatrix::new(vec![0.0; self.dim * self.dim], self.dim);
         for i in 0..self.dim {
@@ -69,7 +69,8 @@ fn test_cholesky() {
 }
 
 // packed format column-major
-struct Cholesky {
+#[derive(Clone, Debug)]
+pub struct Cholesky {
     data: Vec<f64>,
     dim: usize,
 }
@@ -79,18 +80,27 @@ impl Cholesky {
         Self { data, dim }
     }
 
-    fn append_column(&self, mut x: Vec<f64>) -> Self {
+    pub fn forward_solve(&self, x: &mut [f64]) {
+        let mut idx = 0;
+        for i in 0..self.dim {
+            x[i] /= self.data[idx];
+            idx += 1;
+            for j in i + 1..self.dim {
+                x[j] -= self.data[idx] * x[i];
+                idx += 1;
+            }
+        }
+    }
+
+    pub fn append_column(&self, mut x: Vec<f64>) -> Self {
         let mut new_chol = Self::new(
             Vec::with_capacity(Self::chol_size(self.dim + 1)),
             self.dim + 1,
         );
+        self.forward_solve(&mut x);
         let mut idx = 0;
         for i in 0..self.dim {
-            x[i] /= self.data[idx];
-            new_chol.data.push(self.data[idx]);
-            idx += 1;
-            for j in i + 1..self.dim {
-                x[j] -= self.data[idx] * x[i];
+            for _ in i..self.dim {
                 new_chol.data.push(self.data[idx]);
                 idx += 1;
             }
@@ -104,7 +114,7 @@ impl Cholesky {
         new_chol
     }
 
-    fn remove_column(&self, k: usize) -> Self {
+    pub fn remove_column(&self, k: usize) -> Self {
         let mut new_chol = Self::new(
             Vec::with_capacity(Self::chol_size(self.dim - 1)),
             self.dim - 1,
