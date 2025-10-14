@@ -92,25 +92,30 @@ impl Cholesky {
         }
     }
 
-    pub fn append_column(&self, mut x: Vec<f64>) -> Self {
-        let mut new_chol = Self::new(
-            Vec::with_capacity(Self::chol_size(self.dim + 1)),
-            self.dim + 1,
-        );
-        self.forward_solve(&mut x);
+    fn get_new_chol(&self, new_chol: &mut Cholesky, x: &[f64]) {
         let mut idx = 0;
         for i in 0..self.dim {
-            for _ in i..self.dim {
-                new_chol.data.push(self.data[idx]);
-                idx += 1;
-            }
+            let stride = self.dim - i;
+            new_chol
+                .data
+                .extend_from_slice(&self.data[idx..idx + stride]);
             new_chol.data.push(x[i]);
+            idx += stride;
         }
         let mut sum = 0.0;
         for i in 0..self.dim {
             sum += x[i] * x[i];
         }
         new_chol.data.push((x[self.dim] - sum).sqrt());
+    }
+
+    pub fn append_column(&self, mut x: Vec<f64>) -> Self {
+        let mut new_chol = Self::new(
+            Vec::with_capacity(Self::chol_size(self.dim + 1)),
+            self.dim + 1,
+        );
+        self.forward_solve(&mut x);
+        self.get_new_chol(&mut new_chol, &x);
         new_chol
     }
 
