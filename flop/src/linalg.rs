@@ -71,7 +71,7 @@ fn test_cholesky() {
 // packed format column-major
 #[derive(Clone, Debug)]
 pub struct Cholesky {
-    data: Vec<f64>,
+    pub data: Vec<f64>,
     dim: usize,
 }
 
@@ -92,7 +92,12 @@ impl Cholesky {
         }
     }
 
-    fn get_new_chol(&self, new_chol: &mut Cholesky, x: &[f64]) {
+    pub fn append_column(&self, mut x: Vec<f64>) -> Self {
+        let mut new_chol = Self::new(
+            Vec::with_capacity(Self::chol_size(self.dim + 1)),
+            self.dim + 1,
+        );
+        self.forward_solve(&mut x);
         let mut idx = 0;
         for i in 0..self.dim {
             let stride = self.dim - i;
@@ -107,15 +112,78 @@ impl Cholesky {
             sum += x[i] * x[i];
         }
         new_chol.data.push((x[self.dim] - sum).sqrt());
+        new_chol
     }
 
-    pub fn append_column(&self, mut x: Vec<f64>) -> Self {
+    pub fn insert_column_before_last(&self, mut x: Vec<f64>) -> Self {
         let mut new_chol = Self::new(
             Vec::with_capacity(Self::chol_size(self.dim + 1)),
             self.dim + 1,
         );
         self.forward_solve(&mut x);
-        self.get_new_chol(&mut new_chol, &x);
+        let mut sum = 0.0;
+        for i in 0..self.dim {
+            sum += x[i] * x[i];
+        }
+        x[self.dim] = (x[self.dim] - sum).sqrt();
+        // Givens params
+        let n = x.len();
+        let a = x[n - 2];
+        let b = x[n - 1];
+
+        let mut c = 1.0;
+        let mut s = 0.0;
+        if b != 0.0 {
+            if b.abs() > a.abs() {
+                let tau = -a / b;
+                s = -1.0 / (1.0 + tau * tau).sqrt();
+                c = s * tau;
+            } else {
+                let tau = -b / a;
+                c = 1.0 / (1.0 + tau * tau).sqrt();
+                s = c * tau;
+            }
+        }
+
+        // ensure positivity of r (new diagonal entry)
+        let mut r = c * a - s * b;
+        if r < 0.0 {
+            c = -c;
+            s = -s;
+            r = -r;
+        }
+
+        x[n - 2] = r;
+        x[n - 1] = 0.0;
+
+        let mut idx = 0;
+        for i in 0..self.dim + 1 {
+            let mut stride = self.dim - i;
+            if stride > 0 {
+                stride -= 1;
+            }
+            new_chol
+                .data
+                .extend_from_slice(&self.data[idx..idx + stride]);
+            idx += stride;
+            if i < self.dim {
+                new_chol.data.push(x[i]);
+                new_chol.data.push(self.data[idx]);
+            } else {
+                new_chol.data.push(0.0);
+            }
+            idx += 1;
+        }
+
+        let m = self.data.len();
+        let tau1 = self.data[m - 1];
+        let tau2 = 0.0;
+        let new_tau1 = c * tau1 - s * tau2;
+        let new_tau2 = s * tau1 + c * tau2;
+
+        let new_m = new_chol.data.len();
+        new_chol.data[new_m - 2] = new_tau1;
+        new_chol.data[new_m - 1] = new_tau2.abs();
         new_chol
     }
 
@@ -220,4 +288,22 @@ fn test_cholesky_updates() {
         2,
     );
     assert!(abs_diff_sum(&chol_e.data, &out_e.data) < 1e-9);
+}
+
+#[test]
+fn test_cholesky_insert_before_last() {
+    let a = SquareMatrix::new(vec![4.0, -16.0, -16.0, 98.0], 2);
+    let out_a = a.cholesky();
+    let new_chol = out_a.insert_column_before_last(vec![12.0, -43.0, 37.0]);
+    let chol = Cholesky::new(vec![2.0, 6.0, -8.0, 1.0, 5.0, 3.0], 3);
+    assert!(abs_diff_sum(&chol.data, &new_chol.data) < 1e-9);
+}
+
+#[test]
+fn test_cholesky_insert_before_last2() {
+    let a = SquareMatrix::new(vec![37.0], 1);
+    let out_a = a.cholesky();
+    let new_chol = out_a.insert_column_before_last(vec![12.0, 4.0]);
+    let chol = Cholesky::new(vec![2.0, 6.0, 1.0], 2);
+    assert!(abs_diff_sum(&chol.data, &new_chol.data) < 1e-9);
 }
