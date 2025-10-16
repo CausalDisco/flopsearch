@@ -86,9 +86,9 @@ impl Cholesky {
             x[i] /= self.data[idx];
             idx += 1;
             for j in i + 1..self.dim {
-                x[j] -= self.data[idx] * x[i];
-                idx += 1;
+                x[j] -= self.data[idx + j - i - 1] * x[i];
             }
+            idx += self.dim - i - 1;
         }
     }
 
@@ -197,12 +197,16 @@ impl Cholesky {
         let mut idx = 0;
         for i in 0..self.dim {
             if i < k {
-                for j in i..self.dim {
-                    if j != k {
-                        new_chol.data.push(self.data[idx]);
-                    }
-                    idx += 1;
-                }
+                let stride = k - i;
+                new_chol
+                    .data
+                    .extend_from_slice(&self.data[idx..idx + stride]);
+                idx += stride + 1;
+                let stride = self.dim - k - 1;
+                new_chol
+                    .data
+                    .extend_from_slice(&self.data[idx..idx + stride]);
+                idx += stride;
             } else if i == k {
                 // skip (k, k) element
                 idx += 1;

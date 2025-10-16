@@ -84,6 +84,14 @@ impl Bic {
     //    }
     //}
 
+    fn abs_diff_sum(a: &[f64], b: &[f64]) -> f64 {
+        let mut sum = 0.0;
+        for i in 0..a.len() {
+            sum += (a[i] - b[i]).abs();
+        }
+        sum
+    }
+
     pub fn local_score_plus(&self, v: usize, old_local: &LocalScore, r: usize) -> LocalScore {
         let num_parents = old_local.parents.len() + 1;
         let mut new_parents_v = Vec::with_capacity(num_parents + 1);
@@ -93,6 +101,21 @@ impl Bic {
         let ins_col = matrix::column_subvector(&self.cov, &new_parents_v, r);
         let new_chol = old_local.chol.insert_column_before_last(ins_col);
         let std_var = *new_chol.data.last().unwrap();
+
+        //let mut new_parents_scratch = new_parents_v.clone();
+        //new_parents_scratch.pop();
+        //new_parents_scratch.pop();
+        //new_parents_scratch.push(r);
+        //new_parents_scratch.push(v);
+        //let submat = matrix::submatrix(&self.cov, &new_parents_scratch);
+        //let chol = submat.cholesky();
+
+        ////println!("plus {} {:?} {}", v, old_local.parents, r);
+        ////println!("{:?}", new_chol);
+        ////println!("{:?}", chol);
+
+        //assert!(Self::abs_diff_sum(&new_chol.data, &chol.data) <= 1e-9);
+
         let mut new_parents = new_parents_v;
         new_parents.pop();
         new_parents.pop();
@@ -104,13 +127,25 @@ impl Bic {
         }
     }
 
-    pub fn local_score_minus(&self, _v: usize, old_local: &LocalScore, r: usize) -> LocalScore {
+    pub fn local_score_minus(&self, v: usize, old_local: &LocalScore, r: usize) -> LocalScore {
         let num_parents = old_local.parents.len() - 1;
         let idx = old_local.parents.iter().position(|&u| u == r).unwrap();
         let mut new_parents = old_local.parents.clone();
         new_parents.remove(idx);
         let new_chol = old_local.chol.remove_column(idx);
         let std_var = *new_chol.data.last().unwrap();
+
+        //let mut new_parents_v = new_parents.clone();
+        //new_parents_v.push(v);
+        //let submat = matrix::submatrix(&self.cov, &new_parents_v);
+        //let chol = submat.cholesky();
+
+        ////println!("minus {} {:?} {}", v, old_local.parents, r);
+        ////println!("{:?}", new_chol);
+        ////println!("{:?}", chol);
+
+        //assert!(Self::abs_diff_sum(&new_chol.data, &chol.data) <= 1e-9);
+
         LocalScore {
             bic: self.compute_local_bic(num_parents, std_var),
             chol: new_chol,
