@@ -25,14 +25,14 @@ impl Bic {
         Self { n, lambda, cov }
     }
 
-    fn res_var_from_chol(var: f64, parent_chol: &Cholesky, mut covs: Vec<f64>) -> f64 {
-        parent_chol.forward_solve(&mut covs);
-        let mut sum = 0.0;
-        for i in 0..covs.len() {
-            sum += covs[i] * covs[i];
-        }
-        var - sum
-    }
+    //fn res_var_from_chol(var: f64, parent_chol: &Cholesky, mut covs: Vec<f64>) -> f64 {
+    //    parent_chol.forward_solve(&mut covs);
+    //    let mut sum = 0.0;
+    //    for i in 0..covs.len() {
+    //        sum += covs[i] * covs[i];
+    //    }
+    //    var - sum
+    //}
 
     //pub fn local_score_init(&self, v: usize, parents: Vec<usize>) -> LocalScore {
     //    let num_parents = parents.len();
@@ -153,6 +153,7 @@ impl Bic {
         }
     }
 
+    #[inline(always)]
     fn compute_local_bic(&self, num_parents: usize, std_var: f64) -> f64 {
         2.0 * self.n as f64 * std_var.max(f64::MIN_POSITIVE).ln()
             + self.lambda * num_parents as f64 * (self.n as f64).ln()
