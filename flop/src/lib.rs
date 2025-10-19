@@ -1,10 +1,10 @@
 pub mod algo;
 pub mod bic;
-pub mod cholesky;
+pub mod dynamic_cholesky;
 pub mod fit_permutation;
 pub mod global_abort;
 pub mod graph;
-pub mod matrix;
+pub mod pivoted_cholesky;
 pub mod scores;
 pub mod token_buffer;
 pub mod utils;

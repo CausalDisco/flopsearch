@@ -10,8 +10,7 @@ use crate::global_abort::GLOBAL_ABORT;
 use crate::graph::Dag;
 use crate::scores::{GlobalScore, LocalScore};
 use crate::token_buffer::TokenBuffer;
-use crate::{cholesky, utils};
-use crate::{fit_permutation, matrix};
+use crate::{fit_permutation, pivoted_cholesky, utils};
 
 static EPS: f64 = 1e-9;
 
@@ -61,9 +60,9 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Dag {
 
     let num_perturbations = (p as f64).ln().round() as usize;
 
-    let corr = matrix::corr_matrix(data);
+    let corr = utils::corr_matrix(data);
 
-    let mut best_perm = cholesky::cholesky_left_min_diag(&corr).1;
+    let mut best_perm = pivoted_cholesky::cholesky_left_min_diag(&corr).1;
 
     let score = Bic::from_cov(n, corr, config.lambda);
 

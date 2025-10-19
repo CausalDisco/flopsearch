@@ -1,4 +1,5 @@
-use nalgebra::{Cholesky, DMatrix, Dyn};
+use crate::dynamic_cholesky::Cholesky;
+use nalgebra::DMatrix;
 
 use crate::bic::Bic;
 
@@ -15,7 +16,7 @@ pub struct GlobalScore {
 #[derive(Clone, Debug)]
 pub struct LocalScore {
     pub bic: f64,
-    pub chol: Cholesky<f64, Dyn>,
+    pub chol: Cholesky,
     pub parents: Vec<usize>,
 }
 
