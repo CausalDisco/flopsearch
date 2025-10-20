@@ -61,11 +61,11 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Dag {
 
     let num_perturbations = (p as f64).ln().round() as usize;
 
-    let cov = matrix::cov_matrix(data);
+    let corr = matrix::corr_matrix(data);
 
-    let mut best_perm = cholesky::cholesky_left_min_diag(&cov).1;
+    let mut best_perm = cholesky::cholesky_left_min_diag(&corr).1;
 
-    let score = Bic::from_cov(n, cov, config.lambda);
+    let score = Bic::from_cov(n, corr, config.lambda);
 
     let mut rng = thread_rng();
     let mut best_bic = f64::MAX;
