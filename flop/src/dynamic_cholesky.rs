@@ -103,7 +103,7 @@ impl Cholesky {
         x[n - 1] = 0.0;
         let prev_corner = *self.data.last().unwrap();
         let new_left_of_corner = c * prev_corner;
-        let new_corner = s * prev_corner;
+        let new_corner = (s * prev_corner).abs();
 
         // fill Cholesky with new values, also one of the hot loops
         // in particular copying over the old values
@@ -126,7 +126,7 @@ impl Cholesky {
         // SAFETY: overwrite at new_size - 2 and write new_size - 1 (last element)
         unsafe {
             *new_data.get_unchecked_mut(new_size - 2) = MaybeUninit::new(new_left_of_corner);
-            *new_data.get_unchecked_mut(new_size - 1) = MaybeUninit::new(new_corner.abs());
+            *new_data.get_unchecked_mut(new_size - 1) = MaybeUninit::new(new_corner);
         }
 
         // SAFETY: all elements are initialized
