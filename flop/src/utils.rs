@@ -24,6 +24,7 @@ pub(crate) fn cov_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
     (centered_data.transpose() * centered_data) / n as f64
 }
 
+// TODO: have tests here
 pub(crate) fn corr_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
     let mut cov = cov_matrix(data);
     let std_devs = cov.diagonal().map(|x| x.sqrt());

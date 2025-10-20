@@ -1,7 +1,7 @@
 pub mod algo;
 pub mod bic;
 pub mod dynamic_cholesky;
-pub mod fit_permutation;
+pub mod fit_parents;
 pub mod global_abort;
 pub mod graph;
 pub mod pivoted_cholesky;

@@ -17,15 +17,6 @@ fn swap_lower_triangle(packed_lower: &mut [f64], a: usize, b: usize, n: usize) {
     // Region 3: i in b+1..n
     // Swap columns `a` and `b` for rows after `b`
     ((b + 1)..n).for_each(|i| packed_lower.swap(i + a * n, i + b * n));
-
-    // Negligible speedup through unsafe
-    // let ptr = packed_lower.as_mut_ptr();
-    // unsafe {
-    //     (0..a).for_each(|i| std::ptr::swap(ptr.add(a + i * n), ptr.add(b + i * n)));
-    //     std::ptr::swap(ptr.add(a * (n + 1)), ptr.add(b * (n + 1)));
-    //     ((a + 1)..b).for_each(|i| std::ptr::swap(ptr.add(i + a * n), ptr.add(b + i * n)));
-    //     ((b + 1)..n).for_each(|i| std::ptr::swap(ptr.add(i + a * n), ptr.add(i + b * n)));
-    // }
 }
 
 /// Performs pivoted cholesky decomposition on a symmetric positive definite matrix with all-ones diagonal, that is, a full rank **correlation** matrix
@@ -37,16 +28,9 @@ fn swap_lower_triangle(packed_lower: &mut [f64], a: usize, b: usize, n: usize) {
 pub fn cholesky_left_min_diag(matrix: &DMatrix<f64>) -> (DMatrix<f64>, Vec<usize>) {
     // No input checks for being square, symmetric, and having an all-1s diagonal;
     // also just panics if matrix is not positive definite
-
-    // nalgebra does not do fast zeros initialisation (as eg vec![0.; n*n] does)
-    // so we just clone the entire input matrix creating some redundant overhead
-    // instead of only copying the lower triangle into a new 0s matrix.
-    // Could operate directly on `matrix` and in the end mirror the upper triangle to recover the original matrix,
-    // but this is dirty for relatively little gain;
-    // alternatively could operate directly on `matrix` and let the caller decide whether to clone the matrix before calling.
     let n = matrix.nrows();
     let mut ldl = matrix.clone();
-    let mut ldl_slice = ldl.as_mut_slice();
+    let ldl_slice = ldl.as_mut_slice();
     let mut permutation: Vec<usize> = (0..n).collect();
 
     // Find the two indices with the largest absolute off-diagonal entry
@@ -97,13 +81,13 @@ pub fn cholesky_left_min_diag(matrix: &DMatrix<f64>) -> (DMatrix<f64>, Vec<usize
         // which instead of two swaps (column 1 and 0 followed by column k and 1)
         // only requires one (column k and 0) for the first two pivots
         next_pivot.id += offdiag_state.rowoffset + 1;
-        swap_lower_triangle(&mut ldl_slice, 0, next_pivot.id, n);
+        swap_lower_triangle(ldl_slice, 0, next_pivot.id, n);
         permutation.swap(0, next_pivot.id);
     } else {
-        swap_lower_triangle(&mut ldl_slice, 0, next_pivot.id, n);
+        swap_lower_triangle(ldl_slice, 0, next_pivot.id, n);
         permutation.swap(0, next_pivot.id);
         next_pivot.id += offdiag_state.rowoffset + 1;
-        swap_lower_triangle(&mut ldl_slice, 1, next_pivot.id, n);
+        swap_lower_triangle(ldl_slice, 1, next_pivot.id, n);
         permutation.swap(1, next_pivot.id);
     }
 
@@ -119,7 +103,7 @@ pub fn cholesky_left_min_diag(matrix: &DMatrix<f64>) -> (DMatrix<f64>, Vec<usize
     // we only update lower triangle values, so when step > = n-1 there's only a diagonal value left, which we don't update here
     // we start at 1 instead of 0, see above
     // we iterate until < n-1 instead of < n since we forward subtract off the diagonals,
-    // so there's nothign to do in the last round other than sqrt-ing the last diagonal entry which we do below
+    // so there's nothing to do in the last round other than sqrt-ing the last diagonal entry which we do below
     for step in 1..n - 1 {
         let (left_cols, step_col) = ldl_slice.split_at_mut(step * n);
         let (step_col, right_cols) = step_col.split_at_mut(n);
@@ -141,10 +125,10 @@ pub fn cholesky_left_min_diag(matrix: &DMatrix<f64>) -> (DMatrix<f64>, Vec<usize
 
             let step_col = &mut step_col[step..n];
             for l in 1..step_col.len() {
-                step_col[l] += -&col_0[0] * &col_0[l]
-                    - &col_1[0] * &col_1[l]
-                    - &col_2[0] * &col_2[l]
-                    - &col_3[0] * &col_3[l];
+                step_col[l] += -col_0[0] * col_0[l]
+                    - col_1[0] * col_1[l]
+                    - col_2[0] * col_2[l]
+                    - col_3[0] * col_3[l];
             }
             k += 4;
         }
@@ -154,7 +138,7 @@ pub fn cholesky_left_min_diag(matrix: &DMatrix<f64>) -> (DMatrix<f64>, Vec<usize
             let col_l = &col_l[step..n];
             let step_col = &mut step_col[step..n];
             for l in 1..step_col.len() {
-                step_col[l] += -&col_l[0] * &col_l[l];
+                step_col[l] += -col_l[0] * col_l[l];
             }
         }
 
@@ -173,7 +157,7 @@ pub fn cholesky_left_min_diag(matrix: &DMatrix<f64>) -> (DMatrix<f64>, Vec<usize
             }
         }
         // swap things around accordingly
-        swap_lower_triangle(&mut ldl_slice, step + 1, next_pivot.id, n);
+        swap_lower_triangle(ldl_slice, step + 1, next_pivot.id, n);
         permutation.swap(step + 1, next_pivot.id);
     }
     // see above, this is the only thing needed when we iterate until < n-1 instead of < n

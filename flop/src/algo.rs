@@ -10,7 +10,7 @@ use crate::global_abort::GLOBAL_ABORT;
 use crate::graph::Dag;
 use crate::scores::{GlobalScore, LocalScore};
 use crate::token_buffer::TokenBuffer;
-use crate::{fit_permutation, pivoted_cholesky, utils};
+use crate::{fit_parents, pivoted_cholesky, utils};
 
 static EPS: f64 = 1e-9;
 
@@ -87,7 +87,7 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Dag {
             }
         }
 
-        let mut g = fit_permutation::perm_to_dag(&perm, &score);
+        let mut g = fit_parents::perm_to_dag(&perm, &score);
         let mut bic = g.score();
 
         loop {
@@ -148,15 +148,15 @@ fn reinsert(
         let mut prefix = perm[0..pos].to_vec();
 
         let v_new_local =
-            fit_permutation::fit_parents_minus(v, &v_curr_local, &prefix, z, score, &mut tokens);
+            fit_parents::fit_parents_minus(v, &v_curr_local, &prefix, z, score, &mut tokens);
         let v_score_diff = v_new_local.bic - v_curr_local.bic;
-        v_curr_local = v_new_local.clone(); // get rid of cloning?
+        v_curr_local = v_new_local.clone();
 
         // parents of z are updated based on addition of v
         prefix.push(v);
         let z_curr_local = &g.local_scores[z];
         let z_new_local =
-            fit_permutation::fit_parents_plus(z, z_curr_local, &prefix, v, score, &mut tokens);
+            fit_parents::fit_parents_plus(z, z_curr_local, &prefix, v, score, &mut tokens);
         let z_score_diff = z_new_local.bic - z_curr_local.bic;
 
         curr_diff += v_score_diff + z_score_diff;
@@ -171,7 +171,7 @@ fn reinsert(
     // look at positions succeeding v
     // start with some resets
     curr_diff = 0.0;
-    v_curr_local = g.local_scores[v].clone(); // TODO: clone?
+    v_curr_local = g.local_scores[v].clone();
 
     for pos in v_index + 1..perm.len() {
         // try to reinsert AFTER element at pos, which we again term z
@@ -181,16 +181,16 @@ fn reinsert(
         utils::rem_first(&mut prefix, v);
         // parents of v are updated based on addition of z
         let v_new_local =
-            fit_permutation::fit_parents_plus(v, &v_curr_local, &prefix, z, score, &mut tokens);
+            fit_parents::fit_parents_plus(v, &v_curr_local, &prefix, z, score, &mut tokens);
         let v_score_diff = v_new_local.bic - v_curr_local.bic;
-        v_curr_local = v_new_local.clone(); // get rid of cloning?
+        v_curr_local = v_new_local.clone();
 
         // remove z from prefix
         utils::rem_first(&mut prefix, z);
         let z_curr_local = &g.local_scores[z];
         // parents of z are updated based on removal of v
         let z_new_local =
-            fit_permutation::fit_parents_minus(z, z_curr_local, &prefix, v, score, &mut tokens);
+            fit_parents::fit_parents_minus(z, z_curr_local, &prefix, v, score, &mut tokens);
         let z_score_diff = z_new_local.bic - z_curr_local.bic;
 
         curr_diff += v_score_diff + z_score_diff;

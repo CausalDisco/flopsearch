@@ -65,7 +65,7 @@ pub fn fit_parents_minus(
     tokens: &mut TokenBuffer,
 ) -> LocalScore {
     if !v_local.parents.contains(&r) {
-        return v_local.clone(); // without cloning?
+        return v_local.clone();
     }
 
     let mut v_local_new = score.local_score_minus(v, v_local, r);
