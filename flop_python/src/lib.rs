@@ -29,12 +29,15 @@ fn flop<'py>(
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
     if restarts.is_none() && timeout.is_none() {
         return Err(PyValueError::new_err(
-            "error: neither number of restarts nor timeout was specified, e.g., pass restarts=20 as optional argument",
+            "Config error: neither number of restarts nor timeout was specified, e.g., pass restarts=20 as optional argument",
         ));
     }
     let flop_config = FlopConfig::new(lambda_bic, restarts, timeout, false);
     let data_matrix = DMatrix::from(data.as_matrix());
-    let g = ::flop::algo::run(&data_matrix, flop_config);
+    let g = match ::flop::algo::run(&data_matrix, flop_config) {
+        Ok(res) => res,
+        Err(err) => Err(PyRuntimeError::new_err(format!("FLOP error: {}", err)))?,
+    };
 
     let mut res = vec![vec![0.0; g.p]; g.p];
     if output_dag {

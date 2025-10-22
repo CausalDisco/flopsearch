@@ -38,14 +38,17 @@ fn flop(
 ) -> Result<RMatrix<f64>> {
     if restarts.is_none() && timeout.is_none() {
         return Err(extendr_api::Error::from(
-            "Error: neither number of restarts nor timeout was specified, e.g., pass restarts=20 as optional argument",
+            "Config error: neither number of restarts nor timeout was specified, e.g., pass restarts=20 as optional argument",
         ));
     }
     let flop_config = FlopConfig::new(lambdaBic, restarts, timeout, false);
     let p = data.ncols();
     let n = data.nrows();
     let data_matrix = DMatrix::from_column_slice(n, p, data.data());
-    let g = flop::algo::run(&data_matrix, flop_config);
+    let g = match flop::algo::run(&data_matrix, flop_config) {
+        Ok(res) => res,
+        Err(err) => Err(extendr_api::Error::from(format!("FLOP error: {}", err)))?,
+    };
 
     let mut res: RMatrix<f64> = RMatrix::new_matrix(p, p, |_, _| 0.0);
     let slice = &mut res.data_mut();
