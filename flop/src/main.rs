@@ -80,9 +80,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let g = flop::algo::run(&data, flop_config);
 
     if cli.output_dag {
-        g.output();
+        g?.output();
     } else {
-        g.to_cpdag().output();
+        g?.to_cpdag().output();
     }
     Ok(())
 }

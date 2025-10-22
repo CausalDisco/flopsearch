@@ -6,6 +6,7 @@ use rand::{thread_rng, Rng};
 use std::sync::atomic::Ordering;
 
 use crate::bic::Bic;
+use crate::error::{FlopError, ScoreError};
 use crate::global_abort::GLOBAL_ABORT;
 use crate::graph::Dag;
 use crate::scores::{GlobalScore, LocalScore};
@@ -37,9 +38,12 @@ impl FlopConfig {
     }
 }
 
-pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Dag {
-    // TODO: return error
-    assert!(config.restarts.is_some() || config.timeout.is_some() || config.manual_termination);
+pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
+    if !(config.restarts.is_some() || config.timeout.is_some() || config.manual_termination) {
+        return Err(FlopError::InvalidConfig(
+            "config is missing number of restarts or timeout or manual termination flag".to_owned(),
+        ));
+    }
 
     if config.manual_termination {
         ctrlc::set_handler(|| {
@@ -87,14 +91,14 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Dag {
             }
         }
 
-        let mut g = fit_parents::perm_to_dag(&perm, &score);
+        let mut g = fit_parents::perm_to_dag(&perm, &score)?;
         let mut bic = g.score();
 
         loop {
             let last_bic = bic;
 
             for x in perm.clone() {
-                reinsert(&mut perm, &mut g, &score, &mut bic, x);
+                reinsert(&mut perm, &mut g, &score, &mut bic, x)?;
                 if iter > 0 && GLOBAL_ABORT.load(Ordering::SeqCst) {
                     break;
                 }
@@ -109,6 +113,7 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Dag {
             }
         }
 
+        // need to be at least EPS better than previous optimum
         if bic < best_bic - EPS {
             best_bic = bic;
             best_perm = perm;
@@ -120,7 +125,7 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Dag {
         iter += 1;
     }
 
-    Dag::from_global_score(&best_g.unwrap())
+    Ok(Dag::from_global_score(&best_g.unwrap()))
 }
 
 fn reinsert(
@@ -129,11 +134,11 @@ fn reinsert(
     score: &Bic,
     score_value: &mut f64,
     v: usize,
-) -> bool {
+) -> Result<bool, ScoreError> {
     let v_index = perm.iter().position(|&x| x == v).unwrap();
     let mut v_curr_local = g.local_scores[v].clone();
 
-    let mut best_diff = EPS; // allow small positive diffs in single moves
+    let mut best_diff = EPS; // allow small worsening in single moves
     let mut best_ins_pos = v_index;
     let mut curr_diff = 0.0;
 
@@ -148,7 +153,7 @@ fn reinsert(
         let mut prefix = perm[0..pos].to_vec();
 
         let v_new_local =
-            fit_parents::fit_parents_minus(v, &v_curr_local, &prefix, z, score, &mut tokens);
+            fit_parents::fit_parents_minus(v, &v_curr_local, &prefix, z, score, &mut tokens)?;
         let v_score_diff = v_new_local.bic - v_curr_local.bic;
         v_curr_local = v_new_local.clone();
 
@@ -156,7 +161,7 @@ fn reinsert(
         prefix.push(v);
         let z_curr_local = &g.local_scores[z];
         let z_new_local =
-            fit_parents::fit_parents_plus(z, z_curr_local, &prefix, v, score, &mut tokens);
+            fit_parents::fit_parents_plus(z, z_curr_local, &prefix, v, score, &mut tokens)?;
         let z_score_diff = z_new_local.bic - z_curr_local.bic;
 
         curr_diff += v_score_diff + z_score_diff;
@@ -181,7 +186,7 @@ fn reinsert(
         utils::rem_first(&mut prefix, v);
         // parents of v are updated based on addition of z
         let v_new_local =
-            fit_parents::fit_parents_plus(v, &v_curr_local, &prefix, z, score, &mut tokens);
+            fit_parents::fit_parents_plus(v, &v_curr_local, &prefix, z, score, &mut tokens)?;
         let v_score_diff = v_new_local.bic - v_curr_local.bic;
         v_curr_local = v_new_local.clone();
 
@@ -190,7 +195,7 @@ fn reinsert(
         let z_curr_local = &g.local_scores[z];
         // parents of z are updated based on removal of v
         let z_new_local =
-            fit_parents::fit_parents_minus(z, z_curr_local, &prefix, v, score, &mut tokens);
+            fit_parents::fit_parents_minus(z, z_curr_local, &prefix, v, score, &mut tokens)?;
         let z_score_diff = z_new_local.bic - z_curr_local.bic;
 
         curr_diff += v_score_diff + z_score_diff;
@@ -204,7 +209,7 @@ fn reinsert(
     }
 
     if best_ins_pos == v_index {
-        return false;
+        return Ok(false);
     }
 
     *score_value += best_diff;
@@ -221,5 +226,5 @@ fn reinsert(
     }
     perm.remove(v_index);
     perm.insert(best_ins_pos, v);
-    true
+    Ok(true)
 }

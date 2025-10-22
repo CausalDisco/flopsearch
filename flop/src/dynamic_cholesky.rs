@@ -14,17 +14,16 @@ impl Cholesky {
         Self { data, dim }
     }
 
-    pub fn for_matrix(mat: DMatrix<f64>) -> Self {
+    pub fn for_matrix(mat: DMatrix<f64>) -> Option<Self> {
         let dim = mat.nrows();
-        // TODO: error handling
-        let nalgebra_chol = mat.cholesky().unwrap();
+        let nalgebra_chol = mat.cholesky()?;
         let mut packed_chol = Vec::with_capacity(dim * (dim + 1) / 2);
         for i in 0..dim {
             for j in i..dim {
                 packed_chol.push(nalgebra_chol.l_dirty()[(j, i)]);
             }
         }
-        Cholesky::new(packed_chol, dim)
+        Some(Cholesky::new(packed_chol, dim))
     }
 
     pub fn get_bottom_right(&self) -> f64 {
@@ -33,12 +32,14 @@ impl Cholesky {
 
     // this is one of the hot loops
     #[inline(always)]
-    fn forward_solve(&self, x: &mut [f64]) {
+    fn forward_solve(&self, x: &mut [f64]) -> Result<(), ()> {
         let mut diag_idx = 0;
         for i in 0..self.dim {
             unsafe {
                 let diag = *self.data.get_unchecked(diag_idx);
-                // TODO: check for divide by zero
+                if diag <= 0.0 {
+                    return Err(());
+                }
                 let xi = *x.get_unchecked(i) / diag;
                 *x.get_unchecked_mut(i) = xi;
 
@@ -53,6 +54,7 @@ impl Cholesky {
                 diag_idx += self.dim - i;
             }
         }
+        Ok(())
     }
 
     #[inline(always)]
@@ -80,7 +82,7 @@ impl Cholesky {
         (c, s, r)
     }
 
-    pub fn insert_column_before_last(&self, mut x: Vec<f64>) -> Self {
+    pub fn insert_column_before_last(&self, mut x: Vec<f64>) -> Option<Self> {
         let new_size = (self.dim + 1) * (self.dim + 2) / 2;
         let mut new_data: Vec<MaybeUninit<f64>> = Vec::with_capacity(new_size);
         unsafe {
@@ -88,7 +90,7 @@ impl Cholesky {
         }
 
         // solve for x (added row if it would be appended)
-        self.forward_solve(&mut x);
+        self.forward_solve(&mut x).ok()?;
         let mut sum = 0.0;
         for &el in x[0..self.dim].iter() {
             sum += el * el;
@@ -130,10 +132,10 @@ impl Cholesky {
         }
 
         // SAFETY: all elements are initialized
-        Self::new(
+        Some(Self::new(
             unsafe { std::mem::transmute::<Vec<MaybeUninit<f64>>, Vec<f64>>(new_data) },
             self.dim + 1,
-        )
+        ))
     }
 
     pub fn remove_column(&self, k: usize) -> Self {
@@ -219,7 +221,7 @@ mod tests {
             &vec![4.0, 12.0, -16.0, 12.0, 37.0, -43.0, -16.0, -43.0, 98.0],
         );
         let chol = Cholesky::new(vec![2.0, 6.0, -8.0, 1.0, 5.0, 3.0], 3);
-        let output = Cholesky::for_matrix(input);
+        let output = Cholesky::for_matrix(input).unwrap();
         assert!(abs_diff_sum(&chol.data, &output.data) < 1e-9);
 
         let out_rem2 = output.remove_column(2);
@@ -245,8 +247,10 @@ mod tests {
     #[test]
     fn test_cholesky_insert_before_last_2by2() {
         let input = DMatrix::from_column_slice(2, 2, &vec![4.0, -16.0, -16.0, 98.0]);
-        let output = Cholesky::for_matrix(input);
-        let new_chol = output.insert_column_before_last(vec![12.0, -43.0, 37.0]);
+        let output = Cholesky::for_matrix(input).unwrap();
+        let new_chol = output
+            .insert_column_before_last(vec![12.0, -43.0, 37.0])
+            .unwrap();
         let true_chol = Cholesky::new(vec![2.0, 6.0, -8.0, 1.0, 5.0, 3.0], 3);
         assert!(abs_diff_sum(&true_chol.data, &new_chol.data) < 1e-9);
     }
@@ -254,8 +258,8 @@ mod tests {
     #[test]
     fn test_cholesky_insert_before_last_1by1() {
         let input = DMatrix::from_column_slice(1, 1, &vec![37.0]);
-        let output = Cholesky::for_matrix(input);
-        let new_chol = output.insert_column_before_last(vec![12.0, 4.0]);
+        let output = Cholesky::for_matrix(input).unwrap();
+        let new_chol = output.insert_column_before_last(vec![12.0, 4.0]).unwrap();
         let true_chol = Cholesky::new(vec![2.0, 6.0, 1.0], 2);
         assert!(abs_diff_sum(&true_chol.data, &new_chol.data) < 1e-9);
     }

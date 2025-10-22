@@ -1,6 +1,7 @@
 pub mod algo;
 pub mod bic;
 pub mod dynamic_cholesky;
+pub mod error;
 pub mod fit_parents;
 pub mod global_abort;
 pub mod graph;

@@ -1,4 +1,4 @@
-use crate::dynamic_cholesky::Cholesky;
+use crate::{dynamic_cholesky::Cholesky, error::ScoreError};
 use nalgebra::DMatrix;
 
 use crate::bic::Bic;
@@ -21,13 +21,12 @@ pub struct LocalScore {
 }
 
 impl GlobalScore {
-    pub fn new(p: usize, score: &Bic) -> Self {
-        Self {
-            p,
-            local_scores: (0..p)
-                .map(|v| score.local_score_init(v, Vec::new()))
-                .collect(),
+    pub fn new(p: usize, score: &Bic) -> Result<Self, ScoreError> {
+        let mut local_scores = Vec::new();
+        for v in 0..p {
+            local_scores.push(score.local_score_init(v, Vec::new())?);
         }
+        Ok(Self { p, local_scores })
     }
 
     pub fn score(&self) -> f64 {
