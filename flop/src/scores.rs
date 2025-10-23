@@ -1,11 +1,6 @@
 use crate::{dynamic_cholesky::Cholesky, error::ScoreError};
-use nalgebra::DMatrix;
 
 use crate::bic::Bic;
-
-pub fn init_score(data: &DMatrix<f64>, lambda: f64) -> Bic {
-    Bic::new(data, lambda)
-}
 
 #[derive(Clone, Debug)]
 pub struct GlobalScore {
