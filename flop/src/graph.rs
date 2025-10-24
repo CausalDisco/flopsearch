@@ -1,10 +1,9 @@
-use crate::{scores::GlobalScore, token_buffer::TokenBuffer};
+use crate::scores::GlobalScore;
 
 #[derive(Debug)]
 pub struct Dag {
-    // TODO: don't have this pub
-    pub p: usize,
-    pub parents: Vec<Vec<usize>>,
+    p: usize,
+    parents: Vec<Vec<usize>>,
 }
 
 impl Dag {
@@ -28,7 +27,6 @@ impl Dag {
         Self { p, parents }
     }
 
-    // TODO: add more efficient version of this
     pub fn to_cpdag(&self) -> Cpdag {
         let mut dir_edges = Vec::new();
         let mut undir_edges = Vec::new();
@@ -126,10 +124,9 @@ impl Dag {
 
 #[derive(Debug)]
 pub struct Cpdag {
-    // not have this pub
-    pub p: usize,
-    pub out_neighbors: Vec<Vec<usize>>,
-    pub undir_neighbors: Vec<Vec<usize>>,
+    p: usize,
+    out_neighbors: Vec<Vec<usize>>,
+    undir_neighbors: Vec<Vec<usize>>,
 }
 
 impl Cpdag {
@@ -150,56 +147,6 @@ impl Cpdag {
         }
     }
 
-    pub fn undirected_subgraph(&self) -> ChordalGraph {
-        ChordalGraph {
-            p: self.p,
-            neighbors: self.undir_neighbors.clone(),
-        }
-    }
-
-    pub fn induced_undirected_subgraph(
-        &self,
-        nodes: &[usize],
-        tokens: &mut TokenBuffer,
-    ) -> ChordalGraph {
-        tokens.clear();
-        for &x in nodes.iter() {
-            tokens.set(x);
-        }
-
-        let mut edge_list = Vec::new();
-        for &x in nodes.iter() {
-            for &y in self.undir_neighbors[x].iter() {
-                if x < y && tokens.check(y) {
-                    edge_list.push((x, y))
-                }
-            }
-        }
-
-        ChordalGraph::new(self.p, edge_list)
-    }
-
-    pub fn to_dag(&self) -> Dag {
-        let mut edges = Vec::new();
-        for (u, out) in self.out_neighbors.iter().enumerate() {
-            for &v in out.iter() {
-                edges.push((u, v));
-            }
-        }
-
-        let tau = self.undirected_subgraph().mcs_order();
-
-        for (u, out) in self.undir_neighbors.iter().enumerate() {
-            for &v in out.iter() {
-                if tau[u] < tau[v] {
-                    edges.push((u, v));
-                }
-            }
-        }
-
-        Dag::from_edge_list(self.p, edges)
-    }
-
     pub fn output(&self) {
         let p = self.p;
         let m = self.out_neighbors.iter().map(|x| x.len()).sum::<usize>()
@@ -217,53 +164,5 @@ impl Cpdag {
                 }
             }
         }
-    }
-}
-
-pub struct ChordalGraph {
-    p: usize,
-    neighbors: Vec<Vec<usize>>,
-}
-
-impl ChordalGraph {
-    pub fn new(p: usize, edge_list: Vec<(usize, usize)>) -> Self {
-        let mut neighbors = vec![Vec::new(); p];
-        for &(u, v) in edge_list.iter() {
-            neighbors[u].push(v);
-            neighbors[v].push(u);
-        }
-        ChordalGraph { p, neighbors }
-    }
-
-    fn mcs_order(&self) -> Vec<usize> {
-        let mut tau = vec![0; self.p];
-        let mut sets = vec![Vec::new(); self.p];
-        let mut cardinality = vec![0; self.p];
-        let mut max_cardinality = 0;
-
-        sets[0] = (0..self.p).collect();
-        let mut idx = 0;
-
-        while idx < self.p {
-            while max_cardinality > 0 && sets[max_cardinality].is_empty() {
-                max_cardinality -= 1;
-            }
-            let u = sets[max_cardinality].pop().unwrap();
-            if cardinality[u] == usize::MAX {
-                continue;
-            }
-            tau[u] = idx;
-            idx += 1;
-            cardinality[u] = usize::MAX;
-            for &v in self.neighbors[u].iter() {
-                if cardinality[v] < self.p {
-                    cardinality[v] += 1;
-                    sets[cardinality[v]].push(v);
-                }
-            }
-            max_cardinality += 1;
-        }
-
-        tau
     }
 }
