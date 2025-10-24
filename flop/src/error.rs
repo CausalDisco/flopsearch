@@ -40,13 +40,13 @@ impl std::fmt::Display for ScoreError {
         if let Some(r) = self.added_node {
             write!(
                 f,
-                "could not compute local score for node {} with parents {:?} when adding parent {}, likely caused by rank deficiency or numerical issues",
+                "could not compute local score for node {} with parents {:?} when adding parent {} (likely caused by rank deficiency or numerical issues)",
                 self.node, self.parents, r
             )
         } else {
             write!(
                 f,
-                "could not compute local score for node {} with parents {:?}, likely caused by rank deficiency or numerical issues",
+                "could not compute local score for node {} with parents {:?} (likely caused by rank deficiency or numerical issues)",
                 self.node, self.parents
             )
         }

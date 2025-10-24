@@ -2,8 +2,8 @@ use crate::scores::GlobalScore;
 
 #[derive(Debug)]
 pub struct Dag {
-    p: usize,
-    parents: Vec<Vec<usize>>,
+    pub p: usize,
+    pub parents: Vec<Vec<usize>>,
 }
 
 impl Dag {
@@ -124,9 +124,9 @@ impl Dag {
 
 #[derive(Debug)]
 pub struct Cpdag {
-    p: usize,
-    out_neighbors: Vec<Vec<usize>>,
-    undir_neighbors: Vec<Vec<usize>>,
+    pub p: usize,
+    pub out_neighbors: Vec<Vec<usize>>,
+    pub undir_neighbors: Vec<Vec<usize>>,
 }
 
 impl Cpdag {
