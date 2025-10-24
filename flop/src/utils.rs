@@ -1,9 +1,16 @@
 use nalgebra::DMatrix;
+use rand::{rngs::ThreadRng, seq::SliceRandom};
 
 pub fn rem_first(vec: &mut Vec<usize>, x: usize) {
     if let Some(pos) = vec.iter().position(|&u| u == x) {
         vec.remove(pos);
     }
+}
+
+pub fn rand_perm(p: usize, rng: &mut ThreadRng) -> Vec<usize> {
+    let mut perm: Vec<usize> = (0..p).collect();
+    perm.shuffle(rng);
+    perm
 }
 
 pub fn cov_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {

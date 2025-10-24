@@ -25,7 +25,7 @@ fn swap_lower_triangle(packed_lower: &mut [f64], a: usize, b: usize, n: usize) {
 ///   - Remaining pivots are selected based on miniminal diagonal value
 /// - Physical row and column swaps are used (of the lower-triangle only so upper triangle is garbage)
 /// - left-looking with diagonals of the trailing submatrix computed ahead to be able to select pivots
-pub fn cholesky_left_min_diag(matrix: &DMatrix<f64>) -> (DMatrix<f64>, Vec<usize>) {
+pub fn cholesky_left_min_diag(matrix: &DMatrix<f64>) -> Option<(DMatrix<f64>, Vec<usize>)> {
     // No input checks for being square, symmetric, and having an all-1s diagonal;
     // also just panics if matrix is not positive definite
     let n = matrix.nrows();
@@ -108,7 +108,11 @@ pub fn cholesky_left_min_diag(matrix: &DMatrix<f64>) -> (DMatrix<f64>, Vec<usize
         let (left_cols, step_col) = ldl_slice.split_at_mut(step * n);
         let (step_col, right_cols) = step_col.split_at_mut(n);
 
-        let diag = step_col[step].sqrt();
+        let diag_squared = step_col[step];
+        if diag_squared <= 0.0 {
+            return None;
+        }
+        let diag = diag_squared.sqrt();
         step_col[step] = diag;
 
         // --- loop unrolling
@@ -163,5 +167,5 @@ pub fn cholesky_left_min_diag(matrix: &DMatrix<f64>) -> (DMatrix<f64>, Vec<usize
     // see above, this is the only thing needed when we iterate until < n-1 instead of < n
     ldl_slice[ldl_slice.len() - 1] = ldl_slice[ldl_slice.len() - 1].sqrt();
 
-    (ldl, permutation)
+    Some((ldl, permutation))
 }

@@ -62,15 +62,18 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
     let p = data.ncols();
     let n = data.nrows();
 
+    let mut rng = thread_rng();
     let num_perturbations = (p as f64).ln().round() as usize;
 
     let corr = utils::corr_matrix(data);
 
-    let mut best_perm = pivoted_cholesky::cholesky_left_min_diag(&corr).1;
+    let mut best_perm = match pivoted_cholesky::cholesky_left_min_diag(&corr) {
+        None => utils::rand_perm(p, &mut rng),
+        Some((_, order)) => order,
+    };
 
     let score = Bic::from_cov(n, corr, config.lambda);
 
-    let mut rng = thread_rng();
     let mut best_bic = f64::MAX;
     let mut best_g = None;
 
