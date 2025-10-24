@@ -95,7 +95,11 @@ impl Cholesky {
         for &el in x[0..self.dim].iter() {
             sum += el * el;
         }
-        x[self.dim] = (x[self.dim] - sum).sqrt();
+        let new_diag_squared = x[self.dim] - sum;
+        if new_diag_squared <= 0.0 {
+            return None;
+        }
+        x[self.dim] = new_diag_squared.sqrt();
 
         // Givens rotation necessary for triangular shape when inserting x before the last row
         // this part is cheap, it just manipulates four distinct values
