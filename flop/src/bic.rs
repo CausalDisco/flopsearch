@@ -45,9 +45,9 @@ impl Bic {
         let submat = utils::submatrix(&self.cov, &parents_v);
         let chol = Cholesky::for_matrix(submat)
             .ok_or_else(|| ScoreError::new_local(v, parents.clone()))?;
-        let std_var = chol.get_bottom_right();
+        let stddev_res = chol.get_bottom_right();
         Ok(LocalScore {
-            bic: self.compute_local_bic(num_parents, std_var),
+            bic: self.compute_local_bic(num_parents, stddev_res),
             chol,
             parents,
         })
@@ -80,13 +80,13 @@ impl Bic {
                     .ok_or_else(|| ScoreError::new_grow(v, old_local.parents.clone(), r))?
             }
         };
-        let std_var = new_chol.get_bottom_right();
+        let stddev_res = new_chol.get_bottom_right();
 
         let mut new_parents = parents_v_r;
         new_parents.pop();
         new_parents[num_parents - 1] = r;
         Ok(LocalScore {
-            bic: self.compute_local_bic(num_parents, std_var),
+            bic: self.compute_local_bic(num_parents, stddev_res),
             chol: new_chol,
             parents: new_parents,
         })
@@ -106,18 +106,18 @@ impl Bic {
         new_parents.extend_from_slice(&old_local.parents[..idx]);
         new_parents.extend_from_slice(&old_local.parents[idx + 1..]);
         let new_chol = old_local.chol.remove_column(idx);
-        let std_var = new_chol.get_bottom_right();
+        let stddev_res = new_chol.get_bottom_right();
 
         Ok(LocalScore {
-            bic: self.compute_local_bic(num_parents, std_var),
+            bic: self.compute_local_bic(num_parents, stddev_res),
             chol: new_chol,
             parents: new_parents,
         })
     }
 
     #[inline(always)]
-    fn compute_local_bic(&self, num_parents: usize, std_var: f64) -> f64 {
-        2.0 * self.n as f64 * std_var.max(f64::MIN_POSITIVE).ln()
+    fn compute_local_bic(&self, num_parents: usize, stddev_res: f64) -> f64 {
+        2.0 * self.n as f64 * stddev_res.max(f64::MIN_POSITIVE).ln()
             + self.lambda * num_parents as f64 * self.logn
     }
 }
