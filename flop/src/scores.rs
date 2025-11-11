@@ -10,7 +10,7 @@ pub struct GlobalScore {
 
 #[derive(Clone, Debug)]
 pub struct LocalScore {
-    pub bic: f64,
+    pub bic: Option<f64>,
     pub chol: Cholesky,
     pub parents: Vec<usize>,
 }
@@ -24,7 +24,17 @@ impl GlobalScore {
         Ok(Self { p, local_scores })
     }
 
-    pub fn score(&self) -> f64 {
-        self.local_scores.iter().map(|ls| ls.bic).sum()
+    pub fn get_bic(&self, score: &Bic) -> f64 {
+        self.local_scores.iter().map(|ls| score.get_bic(ls)).sum()
+    }
+}
+
+impl LocalScore {
+    pub fn get_bic(&mut self, score: &Bic) -> f64 {
+        if self.bic.is_none() {
+            let new_value = score.get_bic(self);
+            self.bic = Some(new_value);
+        }
+        self.bic.unwrap()
     }
 }

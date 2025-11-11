@@ -95,7 +95,7 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
         }
 
         let mut g = fit_parents::perm_to_dag(&perm, &score)?;
-        let mut bic = g.score();
+        let mut bic = g.get_bic(&score);
 
         loop {
             let last_bic = bic;
@@ -155,17 +155,21 @@ fn reinsert(
         let z = perm[pos];
         let mut prefix = perm[0..pos].to_vec();
 
-        let v_new_local =
+        let mut v_new_local =
             fit_parents::fit_parents_minus(v, &v_curr_local, &prefix, z, score, &mut tokens)?;
-        let v_score_diff = v_new_local.bic - v_curr_local.bic;
+        // TODO
+        // let v_score_diff = v_new_local.bic - v_curr_local.bic;
+        let v_score_diff = v_new_local.get_bic(score) - v_curr_local.get_bic(score);
         v_curr_local = v_new_local.clone();
 
         // parents of z are updated based on addition of v
         prefix.push(v);
-        let z_curr_local = &g.local_scores[z];
-        let z_new_local =
+        let z_curr_local = &mut g.local_scores[z];
+        let mut z_new_local =
             fit_parents::fit_parents_plus(z, z_curr_local, &prefix, v, score, &mut tokens)?;
-        let z_score_diff = z_new_local.bic - z_curr_local.bic;
+        // TODO
+        // let z_score_diff = z_new_local.bic - z_curr_local.bic;
+        let z_score_diff = z_new_local.get_bic(score) - z_curr_local.get_bic(score);
 
         curr_diff += v_score_diff + z_score_diff;
         if curr_diff < best_diff {
@@ -188,18 +192,22 @@ fn reinsert(
         // remove v from prefix
         utils::rem_first(&mut prefix, v);
         // parents of v are updated based on addition of z
-        let v_new_local =
+        let mut v_new_local =
             fit_parents::fit_parents_plus(v, &v_curr_local, &prefix, z, score, &mut tokens)?;
-        let v_score_diff = v_new_local.bic - v_curr_local.bic;
+        // TODO
+        // let v_score_diff = v_new_local.bic - v_curr_local.bic;
+        let v_score_diff = v_new_local.get_bic(score) - v_curr_local.get_bic(score);
         v_curr_local = v_new_local.clone();
 
         // remove z from prefix
         utils::rem_first(&mut prefix, z);
-        let z_curr_local = &g.local_scores[z];
+        let z_curr_local = &mut g.local_scores[z];
         // parents of z are updated based on removal of v
-        let z_new_local =
+        let mut z_new_local =
             fit_parents::fit_parents_minus(z, z_curr_local, &prefix, v, score, &mut tokens)?;
-        let z_score_diff = z_new_local.bic - z_curr_local.bic;
+        // TODO
+        // let z_score_diff = z_new_local.bic - z_curr_local.bic;
+        let z_score_diff = z_new_local.get_bic(score) - z_curr_local.get_bic(score);
 
         curr_diff += v_score_diff + z_score_diff;
         if curr_diff < best_diff {

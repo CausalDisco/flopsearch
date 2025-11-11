@@ -38,16 +38,14 @@ impl Bic {
         v: usize,
         parents: Vec<usize>,
     ) -> Result<LocalScore, ScoreError> {
-        let num_parents = parents.len();
         let mut parents_v = Vec::with_capacity(parents.len() + 1);
         parents_v.extend_from_slice(&parents);
         parents_v.push(v);
         let submat = utils::submatrix(&self.cov, &parents_v);
         let chol = Cholesky::for_matrix(submat)
             .ok_or_else(|| ScoreError::new_local(v, parents.clone()))?;
-        let std_var = chol.get_bottom_right();
         Ok(LocalScore {
-            bic: self.compute_local_bic(num_parents, std_var),
+            bic: None,
             chol,
             parents,
         })
@@ -80,13 +78,12 @@ impl Bic {
                     .ok_or_else(|| ScoreError::new_grow(v, old_local.parents.clone(), r))?
             }
         };
-        let std_var = new_chol.get_bottom_right();
 
         let mut new_parents = parents_v_r;
         new_parents.pop();
         new_parents[num_parents - 1] = r;
         Ok(LocalScore {
-            bic: self.compute_local_bic(num_parents, std_var),
+            bic: None,
             chol: new_chol,
             parents: new_parents,
         })
@@ -129,7 +126,7 @@ impl Bic {
             new_parents.pop();
             new_parents[num_parents - 1] = r;
             Ok(Some(LocalScore {
-                bic: self.compute_local_bic(num_parents, std_var),
+                bic: None,
                 chol: new_chol,
                 parents: new_parents,
             }))
@@ -152,10 +149,9 @@ impl Bic {
         new_parents.extend_from_slice(&old_local.parents[..idx]);
         new_parents.extend_from_slice(&old_local.parents[idx + 1..]);
         let new_chol = old_local.chol.remove_column(idx);
-        let std_var = new_chol.get_bottom_right();
 
         Ok(LocalScore {
-            bic: self.compute_local_bic(num_parents, std_var),
+            bic: None,
             chol: new_chol,
             parents: new_parents,
         })
@@ -180,7 +176,7 @@ impl Bic {
 
         if std_var * self.nroot < old_std_var {
             Ok(Some(LocalScore {
-                bic: self.compute_local_bic(num_parents, std_var),
+                bic: None,
                 chol: new_chol,
                 parents: new_parents,
             }))
@@ -190,7 +186,9 @@ impl Bic {
     }
 
     #[inline(always)]
-    fn compute_local_bic(&self, num_parents: usize, std_var: f64) -> f64 {
+    pub fn get_bic(&self, localscore: &LocalScore) -> f64 {
+        let std_var = localscore.chol.get_bottom_right();
+        let num_parents = localscore.parents.len();
         2.0 * self.n as f64 * std_var.max(f64::MIN_POSITIVE).ln()
             + num_parents as f64 * self.lognlambda
     }
