@@ -8,14 +8,11 @@ impl TokenBuffer {
     pub fn new(n: usize) -> Self {
         Self {
             tokens: vec![0; n],
-            depth: 0,
+            depth: 1, // initialize cleared
         }
     }
 
     pub fn set(&mut self, i: usize) {
-        if self.tokens[i] == self.depth {
-            return;
-        }
         self.tokens[i] = self.depth;
     }
 
