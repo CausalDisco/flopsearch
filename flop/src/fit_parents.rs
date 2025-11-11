@@ -13,8 +13,10 @@ fn grow(
     loop {
         let mut done = true;
         for &w in non_parents.clone().iter().rev() {
-            let v_local_new = score.local_score_plus(v, v_local, w)?;
-            if v_local_new.bic <= v_local.bic {
+            // TODO
+            // let v_local_new = score.local_score_plus(v, v_local, w)?;
+            // if v_local_new.bic <= v_local.bic {
+            if let Some(v_local_new) = score.local_score_plus_if_improved(v, v_local, w)? {
                 *v_local = v_local_new;
                 utils::rem_first(non_parents, w);
                 done = false;
@@ -36,8 +38,10 @@ fn shrink(
     loop {
         let mut done = true;
         for &w in v_local.parents.clone().iter().rev() {
-            let v_local_new = score.local_score_minus(v, v_local, w)?;
-            if v_local_new.bic <= v_local.bic {
+            // TODO
+            // let v_local_new = score.local_score_minus(v, v_local, w)?;
+            // if v_local_new.bic <= v_local.bic {
+            if let Some(v_local_new) = score.local_score_minus_if_improved(v, v_local, w)? {
                 *v_local = v_local_new;
                 non_parents.push(w);
                 done = false;
@@ -99,17 +103,20 @@ pub fn fit_parents_plus(
     tokens: &mut TokenBuffer,
 ) -> Result<LocalScore, ScoreError> {
     // check if adding r is an improvement
-    let mut v_local_new = score.local_score_plus(v, v_local, r)?;
+    // TODO
+    // let mut v_local_new = score.local_score_plus(v, v_local, r)?;
+    // if v_local_new.bic > v_local.bic {
+    match score.local_score_plus_if_improved(v, v_local, r)? {
+        None => Ok(v_local.clone()),
+        Some(mut v_local_new) => {
+            let mut non_parents = set_diff(tokens, prefix, &v_local_new.parents);
 
-    if v_local_new.bic > v_local.bic {
-        return Ok(v_local.clone());
+            grow(v, &mut v_local_new, &mut non_parents, score)?;
+            shrink(v, &mut v_local_new, &mut non_parents, score)?;
+
+            Ok(v_local_new)
+        }
     }
-    let mut non_parents = set_diff(tokens, prefix, &v_local_new.parents);
-
-    grow(v, &mut v_local_new, &mut non_parents, score)?;
-    shrink(v, &mut v_local_new, &mut non_parents, score)?;
-
-    Ok(v_local_new)
 }
 
 // fit permutation from scratch
