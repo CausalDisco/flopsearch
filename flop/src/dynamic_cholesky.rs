@@ -222,7 +222,7 @@ mod tests {
         let input = DMatrix::from_column_slice(
             3,
             3,
-            &vec![4.0, 12.0, -16.0, 12.0, 37.0, -43.0, -16.0, -43.0, 98.0],
+            &[4.0, 12.0, -16.0, 12.0, 37.0, -43.0, -16.0, -43.0, 98.0],
         );
         let chol = Cholesky::new(vec![2.0, 6.0, -8.0, 1.0, 5.0, 3.0], 3);
         let output = Cholesky::for_matrix(input).unwrap();
@@ -250,7 +250,7 @@ mod tests {
 
     #[test]
     fn test_cholesky_insert_before_last_2by2() {
-        let input = DMatrix::from_column_slice(2, 2, &vec![4.0, -16.0, -16.0, 98.0]);
+        let input = DMatrix::from_column_slice(2, 2, &[4.0, -16.0, -16.0, 98.0]);
         let output = Cholesky::for_matrix(input).unwrap();
         let new_chol = output
             .insert_column_before_last(vec![12.0, -43.0, 37.0])
@@ -261,7 +261,7 @@ mod tests {
 
     #[test]
     fn test_cholesky_insert_before_last_1by1() {
-        let input = DMatrix::from_column_slice(1, 1, &vec![37.0]);
+        let input = DMatrix::from_column_slice(1, 1, &[37.0]);
         let output = Cholesky::for_matrix(input).unwrap();
         let new_chol = output.insert_column_before_last(vec![12.0, 4.0]).unwrap();
         let true_chol = Cholesky::new(vec![2.0, 6.0, 1.0], 2);
