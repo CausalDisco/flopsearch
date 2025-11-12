@@ -1,4 +1,4 @@
-use nalgebra::{DMatrix, DVector};
+use nalgebra::{DMatrix, RowDVector};
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 
 pub fn rem_first(vec: &mut Vec<usize>, x: usize) {
@@ -27,18 +27,14 @@ pub fn cov_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
     let nrows = data.nrows();
     let ncols = data.ncols();
 
-    // Transpose once: now each observation is a column
-    let data_t = data.transpose();
-
-    let mut mean = DVector::zeros(ncols);
+    let mut mean = RowDVector::zeros(ncols);
     let mut cov = DMatrix::zeros(ncols, ncols);
 
-    for (k, obs) in data_t.column_iter().enumerate() {
-        let x = obs.clone_owned();
-        let delta = &x - &mean;
+    for (k, row) in data.row_iter().enumerate() {
+        let delta = row - &mean;
         mean += &delta / (k as f64 + 1.0);
-        let delta2 = &x - &mean;
-        cov += &delta * delta2.transpose();
+        let delta2 = row - &mean;
+        cov += delta.transpose() * &delta2;
     }
 
     &cov / nrows as f64
