@@ -10,7 +10,7 @@ use std::fs::File;
 #[command(
     name = "flop",
     version,
-    after_help = "\x1b[1m\x1b[4mOutput:\x1b[0m Prints the graph to stdout as edge list in csv format with columns 'from', 'to' and 'edge-type'\n\n \x1b[1m\x1b[4mExamples:\x1b[0m\n  Run with 50 restarts: flop path_to_data_file.csv 2.0 --restarts 50\n  Run for 5 seconds:     flop path_to_data_file.csv 1.0 --timeout 5.0\n  Run until kill signal: flop path_to_data_file.csv 1.0 --manual-termination"
+    after_help = "\x1b[1m\x1b[4mOutput:\x1b[0m Prints the graph to stdout as edge list in csv format with columns 'from', 'to' and 'edge-type'\n\n \x1b[1m\x1b[4mExamples:\x1b[0m\n  Run with 50 restarts:  flop path_to_data_file.csv 2.0 --restarts 50\n  Run for 5 seconds:     flop path_to_data_file.csv 1.0 --timeout 5.0\n  Run until kill signal: flop path_to_data_file.csv 1.0 --manual-termination"
 )]
 struct Cli {
     /// Path to the data csv file
