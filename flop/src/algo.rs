@@ -83,14 +83,10 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
     let mut best_bic = f64::MAX;
     let mut best_g = None;
 
-    let mut iter = 0;
+    // number of ILS + 1 and if not configured essentially infinite
+    let limit = config.restarts.unwrap_or(usize::MAX - 1) + 1;
 
-    loop {
-        if let Some(restarts) = config.restarts {
-            if iter > restarts {
-                break;
-            }
-        }
+    for iter in 0..limit {
         let mut perm = best_perm.clone();
         if iter > 0 {
             for _ in 0..num_perturbations {
@@ -103,21 +99,18 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
         let mut g = fit_parents::perm_to_dag(&perm, &score)?;
         let mut bic = g.get_bic(&score);
 
-        loop {
+        'outer: loop {
             let last_bic = bic;
 
             for x in perm.clone() {
                 reinsert(&mut perm, &mut g, &score, &mut bic, x)?;
                 if iter > 0 && GLOBAL_ABORT.load(Ordering::SeqCst) {
-                    break;
+                    break 'outer;
                 }
             }
 
             // break if no improvement during full iteration
             if last_bic - bic <= EPS {
-                break;
-            }
-            if iter > 0 && GLOBAL_ABORT.load(Ordering::SeqCst) {
                 break;
             }
         }
@@ -128,10 +121,6 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
             best_perm = perm;
             best_g = Some(g);
         }
-        if GLOBAL_ABORT.load(Ordering::SeqCst) {
-            break;
-        }
-        iter += 1;
     }
 
     Ok(Dag::from_global_score(&best_g.unwrap()))
