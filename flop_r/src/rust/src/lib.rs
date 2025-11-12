@@ -26,7 +26,7 @@ extendr_module! {
 /// W[cbind(1:(p-1), 2:p)] <- 1
 /// X <- matrix(rnorm(10000 * p), nrow = 10000, ncol = p) %*% solve(diag(p) - W)
 /// X_std <- scale(X)
-/// flop(X, 2.0, restarts=20)
+/// flop(X, 2.0, restarts=50)
 /// @export
 #[extendr]
 fn flop(
@@ -38,7 +38,7 @@ fn flop(
 ) -> Result<RMatrix<f64>> {
     if restarts.is_none() && timeout.is_none() {
         return Err(extendr_api::Error::from(
-            "Config error: neither number of restarts nor timeout was specified, e.g., pass restarts=20 as optional argument",
+            "Config error: neither number of restarts nor timeout was specified, e.g., pass restarts=50 as optional argument",
         ));
     }
     let flop_config = FlopConfig::new(lambdaBic, restarts, timeout, false);
