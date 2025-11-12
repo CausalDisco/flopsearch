@@ -108,7 +108,7 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
             }
 
             // break if no improvement during full iteration
-            if last_bic - EPS <= bic {
+            if last_bic - bic <= EPS {
                 break;
             }
             if iter > 0 && GLOBAL_ABORT.load(Ordering::SeqCst) {
@@ -117,7 +117,7 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
         }
 
         // need to be at least EPS better than previous optimum
-        if bic < best_bic - EPS {
+        if best_bic - bic > EPS {
             best_bic = bic;
             best_perm = perm;
             best_g = Some(g);
