@@ -15,15 +15,15 @@ pub fn rand_perm(p: usize, rng: &mut ThreadRng) -> Vec<usize> {
 
 pub fn cov_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
     // TODO
-    let n = data.nrows();
-    let mean_vector = data.row_mean();
-    let mut centered_data = data.clone();
-    for mut row in centered_data.row_iter_mut() {
-        row -= mean_vector.clone();
-    }
-    let covold = (&centered_data.transpose() * &centered_data) / n as f64;
+    // let n = data.nrows();
+    // let mean_vector = data.row_mean();
+    // let mut centered_data = data.clone();
+    // for mut row in centered_data.row_iter_mut() {
+    //     row -= mean_vector.clone();
+    // }
+    // (&centered_data.transpose() * &centered_data) / n as f64
 
-    // Option - Welford
+    // Welford
     let nrows = data.nrows();
     let ncols = data.ncols();
 
@@ -41,12 +41,7 @@ pub fn cov_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
         cov += &delta * delta2.transpose();
     }
 
-    let cov = cov / nrows as f64;
-
-    let difference = (&cov - &covold).abs().max();
-
-    eprintln!("{:?}", difference);
-    cov
+    &cov / nrows as f64
 }
 
 pub fn corr_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
