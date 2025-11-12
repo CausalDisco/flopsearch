@@ -6,5 +6,5 @@ cargo build --release
 ```
 and running
 ```
-./target/release/flop data_file.csv 2.0 --restarts 20
+./target/release/flop data_file.csv 2.0 --restarts 50
 ```
