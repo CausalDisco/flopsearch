@@ -39,9 +39,15 @@ impl FlopConfig {
 }
 
 pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
-    if !(config.restarts.is_some() || config.timeout.is_some() || config.manual_termination) {
+    // exactly one termination criterion can be configured
+    if config.restarts.is_some() as u8
+        + config.timeout.is_some() as u8
+        + config.manual_termination as u8
+        != 1
+    {
         return Err(FlopError::InvalidConfig(
-            "config is missing number of restarts or timeout or manual termination flag".to_owned(),
+            "config is missing number of restarts xor timeout xor manual termination flag"
+                .to_owned(),
         ));
     }
 
