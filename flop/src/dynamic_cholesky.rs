@@ -114,6 +114,7 @@ impl Cholesky {
         // fill Cholesky with new values, also one of the hot loops
         // in particular copying over the old values
         let mut idx = 0;
+        #[allow(clippy::needless_range_loop)]
         for i in 0..self.dim {
             let stride = self.dim - i - 1;
 

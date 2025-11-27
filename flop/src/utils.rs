@@ -14,15 +14,6 @@ pub fn rand_perm(p: usize, rng: &mut ThreadRng) -> Vec<usize> {
 }
 
 pub fn cov_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
-    // TODO
-    // let n = data.nrows();
-    // let mean_vector = data.row_mean();
-    // let mut centered_data = data.clone();
-    // for mut row in centered_data.row_iter_mut() {
-    //     row -= mean_vector.clone();
-    // }
-    // (&centered_data.transpose() * &centered_data) / n as f64
-
     // Welford
     let nrows = data.nrows();
     let ncols = data.ncols();
