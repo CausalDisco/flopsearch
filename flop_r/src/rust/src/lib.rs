@@ -18,8 +18,7 @@ extendr_module! {
 /// @param lambdaBic The penalty parameter of the BIC, a typical value for structure learning is 2.0.
 /// @param restarts Optional parameter specifying the number of ILS restarts. Either restarts or timeout (below) need to be specified.
 /// @param timeout Optional parameter specifying a timeout after which the search returns. At least one local search is run up to a local optimum. Either restarts or timeout need to be specified.
-/// @param outputDag Optional parameter to output a DAG instead of a CPDAG. Default value is FALSE.
-/// @return A matrix encoding a CPDAG or DAG. The entry in row i and column j is 1 in case of a directed edge from i to j and 2 in case of an undirected edge between those nodes (an additional 2 in row j and column i is omitted).
+/// @return A matrix encoding a CPDAG. The entry in row i and column j is 1 in case of a directed edge from i to j and 2 in case of an undirected edge between those nodes (in case of an undirected edge, the entry in row j and column i is also 2, that is each undirected edge induce two 2's in the matrix).
 /// @examples
 /// p <- 10
 /// W <- matrix(0, nrow = p, ncol = p)
@@ -34,7 +33,6 @@ fn flop(
     lambdaBic: f64,
     #[default = "NA"] restarts: Option<usize>,
     #[default = "NA"] timeout: Option<f64>,
-    #[default = "FALSE"] outputDag: bool,
 ) -> Result<RMatrix<f64>> {
     if restarts.is_none() && timeout.is_none() {
         return Err(extendr_api::Error::from(
@@ -53,23 +51,13 @@ fn flop(
     let mut res: RMatrix<f64> = RMatrix::new_matrix(p, p, |_, _| 0.0);
     let slice = &mut res.data_mut();
 
-    if outputDag {
-        for u in 0..g.p {
-            for &v in g.parents[u].iter() {
-                slice[u * p + v] = 1.0;
-            }
+    let g = g.to_cpdag();
+    for u in 0..g.p {
+        for &v in g.undir_neighbors[u].iter() {
+            slice[v * p + u] = 2.0;
         }
-    } else {
-        let g = g.to_cpdag();
-        for u in 0..g.p {
-            for &v in g.undir_neighbors[u].iter() {
-                if u < v {
-                    slice[v * p + u] = 2.0;
-                }
-            }
-            for &v in g.out_neighbors[u].iter() {
-                slice[v * p + u] = 1.0;
-            }
+        for &v in g.out_neighbors[u].iter() {
+            slice[v * p + u] = 1.0;
         }
     }
     Ok(res)

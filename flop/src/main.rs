@@ -21,14 +21,6 @@ struct Cli {
 
     #[command(flatten)]
     termination: TerminationArgs,
-
-    /// Output a DAG instead of a CPDAG (the latter is default behaviour)
-    #[arg(short, long)]
-    output_dag: bool,
-
-    /// Perform the backward phase of GES before termination (needed for asymptotic consistency, but typically leads to no further improvements)
-    #[arg(short, long)]
-    ges_backward: bool,
 }
 
 #[derive(Args, Debug)]
@@ -79,10 +71,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
     let g = flop::algo::run(&data, flop_config);
 
-    if cli.output_dag {
-        g?.output();
-    } else {
-        g?.to_cpdag().output();
-    }
+    g?.to_cpdag().output();
     Ok(())
 }

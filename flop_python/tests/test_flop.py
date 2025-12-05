@@ -11,3 +11,4 @@ def test_path():
     X_std = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
     G = flopsearch.flop(X_std, 2.0, restarts=50)
     assert np.all(np.diag(G, k=1) == 2)
+    assert np.all(np.diag(G, k=-1) == 2)
