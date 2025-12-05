@@ -32,5 +32,5 @@ p = 10
 W = np.diag(np.ones(p - 1), 1)
 X = np.random.randn(10000, p).dot(linalg.inv(np.eye(p) - W))
 X_std = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
-flopsearch.flop(X_std, 2.0, restarts=20)
+flopsearch.flop(X_std, 2.0, restarts=50)
 ```

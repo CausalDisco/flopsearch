@@ -39,9 +39,15 @@ impl FlopConfig {
 }
 
 pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
-    if !(config.restarts.is_some() || config.timeout.is_some() || config.manual_termination) {
+    // exactly one termination criterion can be configured
+    if config.restarts.is_some() as u8
+        + config.timeout.is_some() as u8
+        + config.manual_termination as u8
+        != 1
+    {
         return Err(FlopError::InvalidConfig(
-            "config is missing number of restarts or timeout or manual termination flag".to_owned(),
+            "config is missing number of restarts xor timeout xor manual termination flag"
+                .to_owned(),
         ));
     }
 
@@ -77,14 +83,10 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
     let mut best_bic = f64::MAX;
     let mut best_g = None;
 
-    let mut iter = 0;
+    // number of ILS + 1 and if not configured essentially infinite
+    let limit = config.restarts.unwrap_or(usize::MAX - 1) + 1;
 
-    loop {
-        if let Some(restarts) = config.restarts {
-            if iter > restarts {
-                break;
-            }
-        }
+    for iter in 0..limit {
         let mut perm = best_perm.clone();
         if iter > 0 {
             for _ in 0..num_perturbations {
@@ -97,35 +99,28 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
         let mut g = fit_parents::perm_to_dag(&perm, &score)?;
         let mut bic = g.score();
 
-        loop {
+        'outer: loop {
             let last_bic = bic;
 
             for x in perm.clone() {
                 reinsert(&mut perm, &mut g, &score, &mut bic, x)?;
                 if iter > 0 && GLOBAL_ABORT.load(Ordering::SeqCst) {
-                    break;
+                    break 'outer;
                 }
             }
 
             // break if no improvement during full iteration
-            if last_bic - EPS <= bic {
-                break;
-            }
-            if iter > 0 && GLOBAL_ABORT.load(Ordering::SeqCst) {
+            if last_bic - bic <= EPS {
                 break;
             }
         }
 
         // need to be at least EPS better than previous optimum
-        if bic < best_bic - EPS {
+        if best_bic - bic > EPS {
             best_bic = bic;
             best_perm = perm;
             best_g = Some(g);
         }
-        if GLOBAL_ABORT.load(Ordering::SeqCst) {
-            break;
-        }
-        iter += 1;
     }
 
     Ok(Dag::from_global_score(&best_g.unwrap()))

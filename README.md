@@ -37,13 +37,13 @@ If you use FLOP in your scientific work, please cite this paper:
 ## How To Run FLOP
 In Python, as a simple example, FLOP can be called by
 ``` py
-flopsearch.flop(X, 2.0, restarts=20)
+flopsearch.flop(X, 2.0, restarts=50)
 ```
-with ```X``` being the data matrix, ```2.0``` the BIC penalty parameter and the number of ILS ```restarts``` being set to ```20```.
+with ```X``` being the data matrix, ```2.0``` the BIC penalty parameter and the number of ILS ```restarts``` being set to ```50```.
 
 Similary, in R, one can call:
 ``` r
-flopsearch::flop(X, 2.0, restarts=20)
+flopsearch::flop(X, 2.0, restarts=50)
 ```
 
 Instead of the number of restarts, it is also possible to set a ```timeout``` in seconds after which the search terminates and returns the best-scoring graph found thus far.

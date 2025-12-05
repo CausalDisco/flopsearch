@@ -1,4 +1,4 @@
-use nalgebra::DMatrix;
+use nalgebra::{DMatrix, RowDVector};
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 
 pub fn rem_first(vec: &mut Vec<usize>, x: usize) {
@@ -13,25 +13,33 @@ pub fn rand_perm(p: usize, rng: &mut ThreadRng) -> Vec<usize> {
     perm
 }
 
+// REMINDER: as we don't need matmul anymore we could drop the nalgebra dependency
 pub fn cov_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
-    let n = data.nrows();
-    let mean_vector = data.row_mean();
-    let mut centered_data = data.clone();
-    for mut row in centered_data.row_iter_mut() {
-        row -= mean_vector.clone();
+    // Welford
+    let nrows = data.nrows();
+    let ncols = data.ncols();
+
+    let mut mean = RowDVector::zeros(ncols);
+    let mut cov = DMatrix::zeros(ncols, ncols);
+
+    for (k, row) in data.row_iter().enumerate() {
+        let delta = row - &mean;
+        mean += &delta / (k as f64 + 1.0);
+        let delta2 = row - &mean;
+        cov += delta.transpose() * &delta2;
     }
-    (centered_data.transpose() * centered_data) / n as f64
+
+    &cov / nrows as f64
 }
 
 pub fn corr_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
     let mut cov = cov_matrix(data);
     let std_devs = cov.diagonal().map(|x| x.sqrt());
 
-    for i in 0..cov.nrows() {
-        for j in 0..cov.ncols() {
-            if std_devs[i] > 0.0 && std_devs[j] > 0.0 {
-                cov[(i, j)] /= std_devs[i] * std_devs[j];
-            }
+    // cols, then rows, so inner loop walks through contiguous memory
+    for j in 0..cov.ncols() {
+        for i in 0..cov.nrows() {
+            cov[(i, j)] /= std_devs[i] * std_devs[j];
         }
     }
     cov
