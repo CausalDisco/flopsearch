@@ -13,6 +13,7 @@ pub fn rand_perm(p: usize, rng: &mut ThreadRng) -> Vec<usize> {
     perm
 }
 
+// REMINDER: as we don't need matmul anymore we could drop the nalgebra dependency
 pub fn cov_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
     // Welford
     let nrows = data.nrows();
@@ -38,10 +39,7 @@ pub fn corr_matrix(data: &DMatrix<f64>) -> DMatrix<f64> {
     // cols, then rows, so inner loop walks through contiguous memory
     for j in 0..cov.ncols() {
         for i in 0..cov.nrows() {
-            // TODO: needed as we fail on non-full-rank covmats anyways?
-            if std_devs[i] > 0.0 && std_devs[j] > 0.0 {
-                cov[(i, j)] /= std_devs[i] * std_devs[j];
-            }
+            cov[(i, j)] /= std_devs[i] * std_devs[j];
         }
     }
     cov
