@@ -13,19 +13,17 @@ use pyo3::{
 ///     lambda_bic: The penalty parameter of the BIC, a typical value for structure learning is 2.0.
 ///     restarts: Optional parameter specifying the number of ILS restarts. Either restarts or timeout (below) need to be specified.
 ///     timeout: Optional parameter specifying a timeout after which the search returns. At least one local search is run up to a local optimum. Either restarts or timeout need to be specified.
-///     output_dag: Optional parameter to output a DAG instead of a CPDAG. Default value is False.
 ///
 /// Returns:
-///     A matrix encoding a CPDAG or DAG. The entry in row i and column j is 1 in case of a directed edge from i to j and 2 in case of an undirected edge between those nodes (an additional 2 in row j and column i is omitted).
+///     A matrix encoding a CPDAG. The entry in row i and column j is 1 in case of a directed edge from i to j and 2 in case of an undirected edge between those nodes (the entry in row j and column i will also be a 2, that is each undirected edge induces two 2's in the matrix).
 #[pyfunction]
-#[pyo3(signature = (data, lambda_bic, *, restarts=None, timeout=None, output_dag=false))]
+#[pyo3(signature = (data, lambda_bic, *, restarts=None, timeout=None))]
 fn flop<'py>(
     py: Python<'py>,
     data: PyReadonlyArray2<f64>,
     lambda_bic: f64,
     restarts: Option<usize>,
     timeout: Option<f64>,
-    output_dag: bool,
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
     if restarts.is_none() && timeout.is_none() {
         return Err(PyValueError::new_err(
@@ -40,23 +38,13 @@ fn flop<'py>(
     };
 
     let mut res = vec![vec![0.0; g.p]; g.p];
-    if output_dag {
-        for u in 0..g.p {
-            for &v in g.parents[u].iter() {
-                res[v][u] = 1.0
-            }
+    let g = g.to_cpdag();
+    for u in 0..g.p {
+        for &v in g.undir_neighbors[u].iter() {
+            res[u][v] = 2.0;
         }
-    } else {
-        let g = g.to_cpdag();
-        for u in 0..g.p {
-            for &v in g.undir_neighbors[u].iter() {
-                if u < v {
-                    res[u][v] = 2.0;
-                }
-            }
-            for &v in g.out_neighbors[u].iter() {
-                res[u][v] = 1.0;
-            }
+        for &v in g.out_neighbors[u].iter() {
+            res[u][v] = 1.0;
         }
     }
 
