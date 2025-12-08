@@ -18,7 +18,7 @@ NULL
 #' @param lambdaBic The penalty parameter of the BIC, a typical value for structure learning is 2.0.
 #' @param restarts Optional parameter specifying the number of ILS restarts. Either restarts or timeout (below) need to be specified.
 #' @param timeout Optional parameter specifying a timeout after which the search returns. At least one local search is run up to a local optimum. Either restarts or timeout need to be specified.
-#' @return A matrix encoding a CPDAG. The entry in row i and column j is 1 in case of a directed edge from i to j and 2 in case of an undirected edge between those nodes (in case of an undirected edge, the entry in row j and column i is also 2, that is each undirected edge induce two 2's in the matrix).
+#' @return A matrix encoding a CPDAG. The entry in row i and column j is 1 in case of a directed edge from i to j and 2 in case of an undirected edge between those nodes (in case of an undirected edge, the entry in row j and column i is also 2, that is each undirected edge induces two 2's in the matrix).
 #' @examples
 #' p <- 10
 #' W <- matrix(0, nrow = p, ncol = p)

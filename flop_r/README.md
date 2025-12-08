@@ -70,5 +70,5 @@ The output of FLOP is a CPDAG encoded with an adjacency matrix whose
 entry in row i and column j is 1 in case of a directed edge from the
 i-th to the j-th variable and 2 in case of an undirected edge between
 those variables (in case of an undirected edge, the entry in row j and
-column i is also 2, that is each undirected edge induce two 2’s in the
+column i is also 2, that is each undirected edge induces two 2’s in the
 matrix).

@@ -16,7 +16,7 @@ flop(data, lambdaBic, restarts = NA, timeout = NA)
 \item{timeout}{Optional parameter specifying a timeout after which the search returns. At least one local search is run up to a local optimum. Either restarts or timeout need to be specified.}
 }
 \value{
-A matrix encoding a CPDAG. The entry in row i and column j is 1 in case of a directed edge from i to j and 2 in case of an undirected edge between those nodes (in case of an undirected edge, the entry in row j and column i is also 2, that is each undirected edge induce two 2's in the matrix).
+A matrix encoding a CPDAG. The entry in row i and column j is 1 in case of a directed edge from i to j and 2 in case of an undirected edge between those nodes (in case of an undirected edge, the entry in row j and column i is also 2, that is each undirected edge induces two 2's in the matrix).
 }
 \description{
 For the given data and parameters, the FLOP algorithm is run and returns the learned graph as an adjacency matrix.
