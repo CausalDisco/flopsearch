@@ -1,6 +1,6 @@
 Package: flopsearch
 Title: Embracing Discrete Search: A Reasonable Approach to Causal Structure Learning
-Version: 0.1.3
+Version: 0.2.0
 Authors@R: c(
     person("Marcel", "Wienöbst", email = "marcel.wienoebst@gmx.de", role = c("aut", "cre", "cph")),
     person("Sebastian", "Weichwald", role = "aut"),
