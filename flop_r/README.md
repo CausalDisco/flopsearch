@@ -12,8 +12,7 @@ algorithm for linear additive noise models.
 
 ## Installation
 
-You can install the development version of flopsearch from
-[GitHub](https://github.com/) with:
+You can install the development version of flopsearch from GitHub with:
 
 ``` r
 install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.2.1/flopsearch.tar.gz")
@@ -34,8 +33,8 @@ library(flopsearch)
 If you use FLOP in your scientific work, please cite this paper:
 
 ``` bibtex
-@article{cifly2025,
-  author  = {Marcel Wien{"{o}}bst and Leonard Henckel and Sebastian Weichwald},
+@article{embracing2025,
+  author  = {Marcel Wien{\"o}bst and Leonard Henckel and Sebastian Weichwald},
   title   = {{Embracing Discrete Search: A Reasonable Approach to Causal Structure Learning}},
   journal = {{arXiv preprint arXiv:2510.04970}},
   year    = {2025}
