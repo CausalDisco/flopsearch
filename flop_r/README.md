@@ -15,7 +15,7 @@ algorithm for linear additive noise models.
 You can install the development version of flopsearch from GitHub with:
 
 ``` r
-install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.2.1/flopsearch.tar.gz")
+install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.2.2/flopsearch.tar.gz")
 ```
 
 This requires a working installation of the [Rust

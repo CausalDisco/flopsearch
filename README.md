@@ -12,7 +12,7 @@ pip install flopsearch
 In R, flopsearch can be installed directly from GitHub:
 
 ``` r
-install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.2.1/flopsearch.tar.gz")
+install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.2.2/flopsearch.tar.gz")
 ```
 
 This requires a working installation of the [Rust toolchain](https://rust-lang.org/tools/install/).
