@@ -1,6 +1,6 @@
 # flopsearch
 
-Python package providing an implementation of the FLOP causal discovery algorithm for linear additive noise models.
+Python package providing an implementation of the [FLOP causal discovery algorithm](https://arxiv.org/abs/2510.04970) for linear additive noise models.
 
 ## Installation
 flopsearch can be installed via pip:
