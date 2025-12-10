@@ -1,6 +1,6 @@
 # FLOP Causal Discovery Algorithm
 
-This repository contains a Rust implementation of the FLOP causal discovery algorithm available from Python and R. 
+This repository contains a Rust implementation of the [FLOP causal discovery algorithm](https://arxiv.org/abs/2510.04970), available for use from Python and R. It is a score-based algorithm for learning equivalence classes of DAGs from observational data, assuming linear relationships between variables. 
 
 ## Installation
 In Python, flopsearch can be installed via pip:
@@ -9,7 +9,7 @@ In Python, flopsearch can be installed via pip:
 pip install flopsearch
 ```
 
-In R, flopsearch can be installed directly from Github:
+In R, flopsearch can be installed directly from GitHub:
 
 ``` r
 install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.2.1/flopsearch.tar.gz")
@@ -17,7 +17,7 @@ install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0
 
 This requires a working installation of the [Rust toolchain](https://rust-lang.org/tools/install/).
 
-The name of the installed package is ```flopsearch``` and it can be loaded with:
+The name of the installed package is ```flopsearch```, and it can be loaded with:
 
 ``` r
 library(flopsearch)
@@ -26,8 +26,8 @@ library(flopsearch)
 ## Citing FLOP
 If you use FLOP in your scientific work, please cite this paper:
 ```bibtex
-@article{cifly2025,
-  author  = {Marcel Wien{"{o}}bst and Leonard Henckel and Sebastian Weichwald},
+@article{embracing2025,
+  author  = {Marcel Wien{\"o}bst and Leonard Henckel and Sebastian Weichwald},
   title   = {{Embracing Discrete Search: A Reasonable Approach to Causal Structure Learning}},
   journal = {{arXiv preprint arXiv:2510.04970}},
   year    = {2025}
@@ -41,7 +41,7 @@ flopsearch.flop(X, 2.0, restarts=50)
 ```
 with ```X``` being the data matrix, ```2.0``` the BIC penalty parameter and the number of ILS ```restarts``` being set to ```50```.
 
-Similary, in R, one can call:
+Similarly, in R, one can call:
 ``` r
 flopsearch::flop(X, 2.0, restarts=50)
 ```
