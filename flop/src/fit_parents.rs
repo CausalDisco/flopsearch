@@ -1,3 +1,6 @@
+use rand::rngs::ThreadRng;
+use rand::seq::SliceRandom;
+
 use crate::bic::Bic;
 use crate::error::ScoreError;
 use crate::scores::{GlobalScore, LocalScore};
@@ -9,10 +12,13 @@ fn grow(
     v_local: &mut LocalScore,
     non_parents: &mut Vec<usize>,
     score: &Bic,
+    rng: &mut ThreadRng,
 ) -> Result<(), ScoreError> {
     loop {
         let mut done = true;
-        for &w in non_parents.clone().iter().rev() {
+        let mut shuffled_non_parents = non_parents.clone();
+        shuffled_non_parents.shuffle(rng);
+        for &w in shuffled_non_parents.iter() {
             let v_local_new = score.local_score_plus(v, v_local, w)?;
             if v_local_new.bic <= v_local.bic {
                 *v_local = v_local_new;
@@ -32,10 +38,13 @@ fn shrink(
     v_local: &mut LocalScore,
     non_parents: &mut Vec<usize>,
     score: &Bic,
+    rng: &mut ThreadRng,
 ) -> Result<(), ScoreError> {
     loop {
         let mut done = true;
-        for &w in v_local.parents.clone().iter().rev() {
+        let mut shuffled_parents = v_local.parents.clone();
+        shuffled_parents.shuffle(rng);
+        for &w in shuffled_parents.iter() {
             let v_local_new = score.local_score_minus(v, v_local, w)?;
             if v_local_new.bic <= v_local.bic {
                 *v_local = v_local_new;
@@ -51,12 +60,17 @@ fn shrink(
 }
 
 // fit parents from scratch
-pub fn fit_parents(v: usize, prefix: &[usize], score: &Bic) -> Result<LocalScore, ScoreError> {
+pub fn fit_parents(
+    v: usize,
+    prefix: &[usize],
+    score: &Bic,
+    rng: &mut ThreadRng,
+) -> Result<LocalScore, ScoreError> {
     let parents = Vec::new();
     let mut non_parents = prefix.to_vec();
     let mut v_local = score.local_score_init(v, parents)?;
-    grow(v, &mut v_local, &mut non_parents, score)?;
-    shrink(v, &mut v_local, &mut non_parents, score)?;
+    grow(v, &mut v_local, &mut non_parents, score, rng)?;
+    shrink(v, &mut v_local, &mut non_parents, score, rng)?;
     Ok(v_local)
 }
 
@@ -76,6 +90,7 @@ pub fn fit_parents_minus(
     r: usize,
     score: &Bic,
     tokens: &mut TokenBuffer,
+    rng: &mut ThreadRng,
 ) -> Result<LocalScore, ScoreError> {
     if !v_local.parents.contains(&r) {
         return Ok(v_local.clone());
@@ -84,8 +99,8 @@ pub fn fit_parents_minus(
     let mut v_local_new = score.local_score_minus(v, v_local, r)?;
     let mut non_parents = set_diff(tokens, prefix, &v_local_new.parents);
 
-    grow(v, &mut v_local_new, &mut non_parents, score)?;
-    shrink(v, &mut v_local_new, &mut non_parents, score)?;
+    grow(v, &mut v_local_new, &mut non_parents, score, rng)?;
+    shrink(v, &mut v_local_new, &mut non_parents, score, rng)?;
 
     Ok(v_local_new)
 }
@@ -97,6 +112,7 @@ pub fn fit_parents_plus(
     r: usize,
     score: &Bic,
     tokens: &mut TokenBuffer,
+    rng: &mut ThreadRng,
 ) -> Result<LocalScore, ScoreError> {
     // check if adding r is an improvement
     let mut v_local_new = score.local_score_plus(v, v_local, r)?;
@@ -106,17 +122,21 @@ pub fn fit_parents_plus(
     }
     let mut non_parents = set_diff(tokens, prefix, &v_local_new.parents);
 
-    grow(v, &mut v_local_new, &mut non_parents, score)?;
-    shrink(v, &mut v_local_new, &mut non_parents, score)?;
+    grow(v, &mut v_local_new, &mut non_parents, score, rng)?;
+    shrink(v, &mut v_local_new, &mut non_parents, score, rng)?;
 
     Ok(v_local_new)
 }
 
 // fit permutation from scratch
-pub fn perm_to_dag(perm: &[usize], score: &Bic) -> Result<GlobalScore, ScoreError> {
+pub fn perm_to_dag(
+    perm: &[usize],
+    score: &Bic,
+    rng: &mut ThreadRng,
+) -> Result<GlobalScore, ScoreError> {
     let mut g = GlobalScore::new(perm.len(), score)?;
     for (i, &v) in perm.iter().enumerate() {
-        g.local_scores[v] = fit_parents(v, &perm[0..i], score)?;
+        g.local_scores[v] = fit_parents(v, &perm[0..i], score, rng)?;
     }
     Ok(g)
 }
