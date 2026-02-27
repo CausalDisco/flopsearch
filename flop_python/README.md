@@ -12,11 +12,11 @@ pip install flopsearch
 ## Citing FLOP
 If you use FLOP in your scientific work, please cite this paper:
 ```bibtex
-@article{embracing2025,
+@article{embracing2026,
   author  = {Marcel Wien{\"o}bst and Leonard Henckel and Sebastian Weichwald},
   title   = {{Embracing Discrete Search: A Reasonable Approach to Causal Structure Learning}},
-  journal = {{arXiv preprint arXiv:2510.04970}},
-  year    = {2025}
+  journal = {International Conference on Learning Representations (ICLR)},
+  year    = {2026}
 }
 ```
 
