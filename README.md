@@ -12,7 +12,7 @@ pip install flopsearch
 In R, flopsearch can be installed directly from GitHub:
 
 ``` r
-install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.2.2/flopsearch.tar.gz")
+install.packages("https://github.com/CausalDisco/flopsearch/releases/download/v0.3.0/flopsearch.tar.gz")
 ```
 
 This requires a working installation of the [Rust toolchain](https://rust-lang.org/tools/install/).
@@ -29,7 +29,7 @@ If you use FLOP in your scientific work, please cite this paper:
 @article{embracing2025,
   author  = {Marcel Wien{\"o}bst and Leonard Henckel and Sebastian Weichwald},
   title   = {{Embracing Discrete Search: A Reasonable Approach to Causal Structure Learning}},
-  journal = {{arXiv preprint arXiv:2510.04970}},
+  journal = {International Conference on Learning Representations (ICLR)},
   year    = {2025}
 }
 ```
