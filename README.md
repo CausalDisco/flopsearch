@@ -26,11 +26,11 @@ library(flopsearch)
 ## Citing FLOP
 If you use FLOP in your scientific work, please cite this paper:
 ```bibtex
-@article{embracing2025,
+@article{embracing2026,
   author  = {Marcel Wien{\"o}bst and Leonard Henckel and Sebastian Weichwald},
   title   = {{Embracing Discrete Search: A Reasonable Approach to Causal Structure Learning}},
   journal = {International Conference on Learning Representations (ICLR)},
-  year    = {2025}
+  year    = {2026}
 }
 ```
 
