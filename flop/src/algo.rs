@@ -2,6 +2,7 @@ use std::thread;
 use std::time::Duration;
 
 use nalgebra::DMatrix;
+use rand::rngs::ThreadRng;
 use rand::{thread_rng, Rng};
 use std::sync::atomic::Ordering;
 
@@ -74,7 +75,9 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
     let corr = utils::corr_matrix(data);
 
     let mut best_perm = match pivoted_cholesky::cholesky_left_min_diag(&corr) {
-        None => utils::rand_perm(p, &mut rng),
+        None => Err(FlopError::InitialOrderError(
+            "Cholesky decomposition failed".to_owned(),
+        ))?,
         Some((_, order)) => order,
     };
 
@@ -96,14 +99,14 @@ pub fn run(data: &DMatrix<f64>, config: FlopConfig) -> Result<Dag, FlopError> {
             }
         }
 
-        let mut g = fit_parents::perm_to_dag(&perm, &score)?;
+        let mut g = fit_parents::perm_to_dag(&perm, &score, &mut rng)?;
         let mut bic = g.score();
 
         'outer: loop {
             let last_bic = bic;
 
             for x in perm.clone() {
-                reinsert(&mut perm, &mut g, &score, &mut bic, x)?;
+                reinsert(&mut perm, &mut g, &score, &mut bic, x, &mut rng)?;
                 if iter > 0 && GLOBAL_ABORT.load(Ordering::SeqCst) {
                     break 'outer;
                 }
@@ -132,6 +135,7 @@ fn reinsert(
     score: &Bic,
     score_value: &mut f64,
     v: usize,
+    rng: &mut ThreadRng,
 ) -> Result<bool, ScoreError> {
     let v_index = perm.iter().position(|&x| x == v).unwrap();
     let mut v_curr_local = g.local_scores[v].clone();
@@ -151,7 +155,7 @@ fn reinsert(
         let mut prefix = perm[0..pos].to_vec();
 
         let v_new_local =
-            fit_parents::fit_parents_minus(v, &v_curr_local, &prefix, z, score, &mut tokens)?;
+            fit_parents::fit_parents_minus(v, &v_curr_local, &prefix, z, score, &mut tokens, rng)?;
         let v_score_diff = v_new_local.bic - v_curr_local.bic;
         v_curr_local = v_new_local.clone();
 
@@ -159,7 +163,7 @@ fn reinsert(
         prefix.push(v);
         let z_curr_local = &g.local_scores[z];
         let z_new_local =
-            fit_parents::fit_parents_plus(z, z_curr_local, &prefix, v, score, &mut tokens)?;
+            fit_parents::fit_parents_plus(z, z_curr_local, &prefix, v, score, &mut tokens, rng)?;
         let z_score_diff = z_new_local.bic - z_curr_local.bic;
 
         curr_diff += v_score_diff + z_score_diff;
@@ -184,7 +188,7 @@ fn reinsert(
         utils::rem_first(&mut prefix, v);
         // parents of v are updated based on addition of z
         let v_new_local =
-            fit_parents::fit_parents_plus(v, &v_curr_local, &prefix, z, score, &mut tokens)?;
+            fit_parents::fit_parents_plus(v, &v_curr_local, &prefix, z, score, &mut tokens, rng)?;
         let v_score_diff = v_new_local.bic - v_curr_local.bic;
         v_curr_local = v_new_local.clone();
 
@@ -193,7 +197,7 @@ fn reinsert(
         let z_curr_local = &g.local_scores[z];
         // parents of z are updated based on removal of v
         let z_new_local =
-            fit_parents::fit_parents_minus(z, z_curr_local, &prefix, v, score, &mut tokens)?;
+            fit_parents::fit_parents_minus(z, z_curr_local, &prefix, v, score, &mut tokens, rng)?;
         let z_score_diff = z_new_local.bic - z_curr_local.bic;
 
         curr_diff += v_score_diff + z_score_diff;

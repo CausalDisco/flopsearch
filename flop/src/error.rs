@@ -1,13 +1,15 @@
 #[derive(Debug)]
 pub enum FlopError {
     InvalidConfig(String),
+    InitialOrderError(String),
     ScoreError(ScoreError),
 }
 
 impl std::fmt::Display for FlopError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FlopError::InvalidConfig(msg) => write!(f, "Invalid config: {}", msg),
+            FlopError::InvalidConfig(msg) => write!(f, "Invalid config error: {}", msg),
+            FlopError::InitialOrderError(msg) => write!(f, "Initial order error: {}", msg),
             FlopError::ScoreError(err) => write!(f, "Score error: {}", err),
         }
     }
